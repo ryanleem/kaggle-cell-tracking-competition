@@ -43,6 +43,8 @@ from tracking_cellmot.metrics import summarise
 # Prediction config
 # =============================================================================
 
+_DEFAULT_POOL_KERNEL_UM = 3.0
+
 @dataclass
 class PredictConfig:
     """All hyperparameters that can affect prediction quality / score.
@@ -156,7 +158,41 @@ _DEFAULT_CONFIG = {
     "unet_layers": [32, 64, 128],
     "downsample": [1, 4, 4],
     "window_size": 2,
+    "pool_kernel_um": _DEFAULT_POOL_KERNEL_UM,
 }
+
+
+def _load_model_config(weights_path: Path) -> tuple[dict, bool]:
+    """Load checkpoint config and report whether it explicitly stores pool size."""
+    config_path = weights_path.parent / "config.json"
+    if config_path.exists():
+        raw_config = json.loads(config_path.read_text())
+        config = {**_DEFAULT_CONFIG, **raw_config}
+        has_pool_kernel = raw_config.get("pool_kernel_um") is not None
+    else:
+        print(f"Warning: config.json not found at {config_path}, using defaults.", flush=True)
+        config = dict(_DEFAULT_CONFIG)
+        has_pool_kernel = False
+
+    # Support legacy configs that used "downsample_factor" (scalar).
+    if "downsample_factor" in config and "downsample" not in config:
+        df = config["downsample_factor"]
+        config["downsample"] = [df, df, df]
+
+    return config, has_pool_kernel
+
+
+def resolve_pool_kernel_um(
+    cli_override: float | None,
+    checkpoint_config: dict,
+    checkpoint_has_pool_kernel: bool,
+) -> tuple[float, str]:
+    """Resolve pool size using CLI, checkpoint, then backward-compatible default."""
+    if cli_override is not None:
+        return float(cli_override), "CLI override"
+    if checkpoint_has_pool_kernel:
+        return float(checkpoint_config["pool_kernel_um"]), "checkpoint config"
+    return _DEFAULT_POOL_KERNEL_UM, "backward-compatible default"
 
 
 def load_model(
@@ -169,17 +205,7 @@ def load_model(
 
     Returns ``(model, window_size, downsample)``.
     """
-    config_path = weights_path.parent / "config.json"
-    if config_path.exists():
-        config = {**_DEFAULT_CONFIG, **json.loads(config_path.read_text())}
-    else:
-        print(f"Warning: config.json not found at {config_path}, using defaults.", flush=True)
-        config = _DEFAULT_CONFIG
-
-    # Support legacy configs that used "downsample_factor" (scalar).
-    if "downsample_factor" in config and "downsample" not in config:
-        df = config["downsample_factor"]
-        config["downsample"] = [df, df, df]
+    config, _ = _load_model_config(weights_path)
 
     downsample = tuple(config["downsample"])
 
@@ -512,10 +538,11 @@ def predict(
     unet_batch_size: int = 4,
     video_slice: slice | None = None,
     evaluate: bool = False,
+    pool_kernel_source: str = "caller",
 ) -> None:
     """Run inference on the test split and save predictions as .geff files."""
     if debug_video is not None:
-        test_names = [debug_video.name]
+        test_names = [debug_video.name.removesuffix(".zarr")]
         data_dir = debug_video.parent
     else:
         folds = json.loads(splits_file.read_text())
@@ -538,7 +565,8 @@ def predict(
     model, window_size, downsample = load_model(weights_path, device)
     print(
         f"Fold {fold}: {len(test_names)} datasets | "
-        f"weights={weights_path} | device={device} | window_size={window_size} | pool_kernel_um={cfg.pool_kernel_um}",
+        f"weights={weights_path} | device={device} | window_size={window_size} | "
+        f"pool_kernel_um={cfg.pool_kernel_um} ({pool_kernel_source})",
         flush=True,
     )
 
@@ -620,6 +648,8 @@ def main() -> None:
                              "Default 0.99: the detector is poorly calibrated because the "
                              "ground truth is sparse (only some cells annotated), so a high "
                              "threshold keeps precision up. Sweep it for your model.")
+    parser.add_argument("--pool-kernel-um", type=float, default=None,
+                        help="Detection max-pool size in microns. Overrides checkpoint config.")
     parser.add_argument("--use-ilp", action="store_true",
                         help="Post-process the predicted graph with the tracksdata ILP "
                              "solver (global, flow-consistent linking) instead of greedy "
@@ -643,21 +673,25 @@ def main() -> None:
         slice(*[int(x) if x else None for x in args.slice.split(":")])
         if args.slice else None
     )
-    cfg = PredictConfig(
-        det_threshold=args.det_threshold,
-        use_ilp=args.use_ilp,
-        ilp_edge_weight=args.ilp_edge_weight,
-        ilp_appearance_weight=args.ilp_appearance_weight,
-        ilp_disappearance_weight=args.ilp_disappearance_weight,
-        ilp_division_weight=args.ilp_division_weight,
-    )
-
     folds = range(5) if args.split == "all" else [int(args.split)]
 
     for fold in folds:
         weights_path = (
             Path(args.weights) if args.weights
             else WEIGHTS_PATH / args.method / f"split_{fold}" / "edge_predictor_best.pth"
+        )
+        checkpoint_config, has_pool_kernel = _load_model_config(weights_path)
+        pool_kernel_um, pool_kernel_source = resolve_pool_kernel_um(
+            args.pool_kernel_um, checkpoint_config, has_pool_kernel,
+        )
+        cfg = PredictConfig(
+            det_threshold=args.det_threshold,
+            pool_kernel_um=pool_kernel_um,
+            use_ilp=args.use_ilp,
+            ilp_edge_weight=args.ilp_edge_weight,
+            ilp_appearance_weight=args.ilp_appearance_weight,
+            ilp_disappearance_weight=args.ilp_disappearance_weight,
+            ilp_division_weight=args.ilp_division_weight,
         )
         predict(
             data_dir=data_dir,
@@ -670,6 +704,7 @@ def main() -> None:
             unet_batch_size=args.unet_batch_size,
             video_slice=video_slice,
             evaluate=args.evaluate,
+            pool_kernel_source=pool_kernel_source,
         )
 
 

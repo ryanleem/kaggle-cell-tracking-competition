@@ -123,9 +123,29 @@ def main() -> None:
     parser.add_argument("--pred-dir", type=Path, required=True, help="Directory of predicted .geff files.")
     parser.add_argument("--gt-dir", type=Path, required=True, help="Directory of ground-truth .geff files.")
     parser.add_argument("--max-distance", type=float, default=7.0)
+    parser.add_argument("--strict", action="store_true",
+                        help="Fail if no datasets are evaluated or any matched dataset is skipped.")
+    parser.add_argument("--require-all-gt", action="store_true",
+                        help="Fail if any ground-truth dataset has no prediction.")
     args = parser.parse_args()
 
-    rows, _ = evaluate_pairs(args.pred_dir, args.gt_dir, max_distance=args.max_distance)
+    rows, skipped = evaluate_pairs(args.pred_dir, args.gt_dir, max_distance=args.max_distance)
+    gt_names = {p.stem for p in args.gt_dir.glob("*.geff")}
+    pred_names = {p.stem for p in args.pred_dir.glob("*.geff")}
+
+    failures = []
+    if args.strict:
+        if not rows:
+            failures.append("zero datasets were evaluated")
+        if skipped:
+            failures.append(f"{len(skipped)} matched dataset(s) were skipped")
+    if args.require_all_gt:
+        missing = sorted(gt_names - pred_names)
+        if missing:
+            failures.append(f"missing predictions for GT dataset(s): {missing}")
+    if failures:
+        parser.error("; ".join(failures))
+
     s = summarise(rows)
     print("\n=== Summary ===")
     print(

@@ -121,6 +121,12 @@ _POS_EMBED_DIM = 8   # per axis; total = 4 axes × _POS_EMBED_DIM = 32
 # Data structures
 # =============================================================================
 
+def _seed_worker(worker_id: int) -> None:
+    """Seed NumPy in a DataLoader worker from PyTorch's worker seed."""
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+
+
 @dataclass(frozen=True)
 class FrameWindowData:
     """Metadata for a window of W consecutive frames (no image data stored).
@@ -821,7 +827,8 @@ def train_epoch(
         voxel_size = tuple(batch["voxel_size"][0].tolist())
         ds_scale = batch["downsample"][0].to(device)                                   # (3,)
 
-        torch.cuda.synchronize()
+        if device.type == "cuda":
+            torch.cuda.synchronize()
         t1 = time.perf_counter()
         t_data += t1 - t0
 
@@ -881,7 +888,8 @@ def train_epoch(
         # --- 5. Combined loss -----------------------------------------------
         loss = edge_loss + det_loss_weight * det_loss
 
-        torch.cuda.synchronize()
+        if device.type == "cuda":
+            torch.cuda.synchronize()
         t2 = time.perf_counter()
         t_forward += t2 - t1
 
@@ -890,7 +898,8 @@ def train_epoch(
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
 
-        torch.cuda.synchronize()
+        if device.type == "cuda":
+            torch.cuda.synchronize()
         t3 = time.perf_counter()
         t_backward += t3 - t2
 
@@ -1101,10 +1110,7 @@ def train(
     if seed is not None:
         g = torch.Generator()
         g.manual_seed(seed)
-
-        def worker_init_fn(worker_id: int) -> None:
-            worker_seed = torch.initial_seed() % 2**32
-            np.random.seed(worker_seed)
+        worker_init_fn = _seed_worker
 
     train_loader = DataLoader(
         train_ds, batch_size=batch_size, shuffle=True,

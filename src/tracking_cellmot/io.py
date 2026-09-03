@@ -178,6 +178,8 @@ def _process_on_gpu(
     4. Transfer back to CPU
     """
     torch_device = torch.device(device)
+    if torch_device.type == "cuda" and not torch.cuda.is_available():
+        torch_device = torch.device("cpu")
 
     # Convert to float32 for processing (zarr data is typically uint16)
     image = image.astype(np.float32)
@@ -195,8 +197,12 @@ def _process_on_gpu(
             q1 = np.float32(q1)
             q2 = np.float32(q2)
 
-    # 2. Transfer raw float32 to GPU once (pinned memory for faster DMA)
-    tensor = torch.from_numpy(image).pin_memory().to(torch_device, non_blocking=True)
+    # 2. Transfer raw float32 to the resolved device once.
+    tensor = torch.from_numpy(image)
+    if torch_device.type == "cuda":
+        tensor = tensor.pin_memory().to(torch_device, non_blocking=True)
+    else:
+        tensor = tensor.to(torch_device)
 
     # 3. Apply normalization on GPU
     if normalize:

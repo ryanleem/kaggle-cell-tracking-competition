@@ -33,11 +33,31 @@ uv sync
 ### Training
 
 ```bash
-uv run python scripts/train_unet_transformer.py \
+python scripts/train_unet_transformer.py \
     --data-dir data/train --split 0 --epochs 3
 ```
 
 This command trained the model released in the public [UNet baseline inference notebook](https://www.kaggle.com/code/thibautgoldsborough/unet-baseline-inference-submission). It was not trained to convergence — expect gains from training longer.
+
+### Reproducible baseline run
+
+The checked-in runner records the exact split, configuration, source hashes,
+commands, logs, checkpoint, predictions, CSV round trip, and evaluation
+metrics in one run directory:
+
+```bash
+python scripts/run_baseline_experiment.py \
+    --config experiments/configs/baseline_smoke.json \
+    --data-dir data/train \
+    --output-root experiments/runs
+```
+
+On local machines with `uv` installed, prefix the command with `uv run`.
+
+The runner refuses to execute from a dirty worktree by default. For local
+development only, pass `--allow-dirty`; the override is recorded in
+`provenance.json`. The configured seed is applied by the training CLI via
+`--seed` and saved alongside the checkpoint configuration.
 
 ### Prediction
 

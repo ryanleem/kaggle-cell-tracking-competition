@@ -1,0 +1,20 @@
+{
+  "method": "baseline",
+  "split": 0,
+  "seed": 0,
+  "epochs": 1,
+  "max_iters": 2,
+  "batch_size": 2,
+  "num_workers": 2,
+  "lr": 0.0001,
+  "det_loss_weight": 1.0,
+  "det_neg_weight": 0.01,
+  "unet_out_channels": 32,
+  "unet_layers": "32,64,128",
+  "downsample": "1,4,4",
+  "window_size": 2,
+  "pool_kernel_um": 5.0,
+  "det_threshold": 0.52,
+  "tracking": "greedy",
+  "split_file": "experiments/splits/baseline_fold0_seed0.json"
+}

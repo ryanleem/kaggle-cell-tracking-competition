@@ -1074,6 +1074,7 @@ def train(
         "downsample": list(downsample),
         "window_size": window_size,
         "pool_kernel_um": pool_kernel_um,
+        "seed": seed,
     }
     (output_dir / "config.json").write_text(json.dumps(model_config, indent=2))
 
@@ -1246,6 +1247,8 @@ def main() -> None:
                         help="Per-voxel weight for non-GT (negative) voxels in detection loss (default: 1e-2).")
     parser.add_argument("--max-iters", type=int, default=None,
                         help="Max training iterations per epoch. None = full epoch.")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="Optional seed for the existing DataLoader seeding path.")
     parser.add_argument("--debug-video", type=str, default=None,
                         help="Path to a single dataset for quick debugging. "
                              "Ignores --fold and splits file; trains and evaluates on this video only.")
@@ -1260,6 +1263,11 @@ def main() -> None:
                         help="Disable multi-GPU; train on cuda:0 only.")
 
     args = parser.parse_args()
+
+    print(
+        f"Effective seed: {args.seed if args.seed is not None else 'None (not explicitly set)'}",
+        flush=True,
+    )
 
     from dataspec import DATASET_PATH
     data_dir = Path(args.data_dir) if args.data_dir else Path(DATASET_PATH)
@@ -1289,6 +1297,7 @@ def main() -> None:
             det_loss_weight=args.det_loss_weight,
             det_neg_weight=args.det_neg_weight,
             max_iters=args.max_iters,
+            seed=args.seed,
             debug_video=debug_video,
             window_size=args.window_size,
             pool_kernel_um=args.pool_kernel_um,

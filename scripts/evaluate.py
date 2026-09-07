@@ -16,6 +16,9 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
+import math
+from numbers import Real
 from pathlib import Path
 
 import tracksdata as td
@@ -118,6 +121,47 @@ def evaluate_run(run: dict, max_distance: float = 7.0) -> list[dict]:
     return rows
 
 
+def _json_safe(value):
+    """Convert non-finite numeric values to JSON ``null`` recursively."""
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, Real) and not isinstance(value, bool):
+        numeric = float(value)
+        if not math.isfinite(numeric):
+            return None
+        # NumPy scalar metrics are common when callers provide custom metric
+        # implementations; convert them to Python scalars for json.dumps.
+        return value.item() if hasattr(value, "item") else value
+    return value
+
+
+def _write_json_report(
+    json_out: Path,
+    evaluated_names: list[str],
+    skipped: list[str],
+    rows: list[dict],
+    summary: dict,
+) -> None:
+    """Write a standards-compliant machine-readable evaluation report."""
+    report = {
+        "schema_version": 1,
+        "evaluated_datasets": evaluated_names,
+        "skipped_datasets": sorted(skipped),
+        "per_dataset_metrics": [
+            {"dataset": name, "metrics": row}
+            for name, row in zip(evaluated_names, rows, strict=True)
+        ],
+        "summary_metrics": summary,
+    }
+    json_out.parent.mkdir(parents=True, exist_ok=True)
+    json_out.write_text(
+        json.dumps(_json_safe(report), indent=2, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Score predicted .geff graphs against ground-truth .geff graphs.")
     parser.add_argument("--pred-dir", type=Path, required=True, help="Directory of predicted .geff files.")
@@ -127,6 +171,8 @@ def main() -> None:
                         help="Fail if no datasets are evaluated or any matched dataset is skipped.")
     parser.add_argument("--require-all-gt", action="store_true",
                         help="Fail if any ground-truth dataset has no prediction.")
+    parser.add_argument("--json-out", type=Path, default=None,
+                        help="Optional path for a standards-compliant JSON evaluation report.")
     args = parser.parse_args()
 
     rows, skipped = evaluate_pairs(args.pred_dir, args.gt_dir, max_distance=args.max_distance)
@@ -147,6 +193,9 @@ def main() -> None:
         parser.error("; ".join(failures))
 
     s = summarise(rows)
+    if args.json_out is not None:
+        evaluated_names = sorted((pred_names & gt_names) - set(skipped))
+        _write_json_report(args.json_out, evaluated_names, skipped, rows, s)
     print("\n=== Summary ===")
     print(
         f"n={s['n']}  score={s['score']:.4f}  "

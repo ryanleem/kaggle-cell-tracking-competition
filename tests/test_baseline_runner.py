@@ -49,6 +49,24 @@ def test_baseline_pilot_500_config_changes_only_iterations_and_artifact_method()
     assert pilot["epochs"] == 1
 
 
+def test_baseline_pilot_5000_config_changes_only_iterations_and_artifact_method() -> None:
+    config_dir = Path(__file__).parent.parent / "experiments" / "configs"
+    baseline = json.loads((config_dir / "baseline_pilot_500.json").read_text())
+    pilot = json.loads((config_dir / "baseline_pilot_5000.json").read_text())
+
+    assert baseline["max_iters"] == 500
+    assert pilot["max_iters"] == 5000
+    assert baseline["method"] == "baseline_pilot_500"
+    assert pilot["method"] == "baseline_pilot_5000"
+    assert set(pilot) == set(baseline)
+    for key in baseline:
+        if key not in {"method", "max_iters"}:
+            assert pilot[key] == baseline[key]
+    assert pilot["split_file"] == "experiments/splits/baseline_fold0_seed0.json"
+    assert pilot["seed"] == 0
+    assert pilot["epochs"] == 1
+
+
 def test_evaluate_json_out_converts_nonfinite_values_and_preserves_summary(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:

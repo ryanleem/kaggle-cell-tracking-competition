@@ -70,6 +70,7 @@ class PredictConfig:
     det_threshold: float = 0.5
     det_tta: bool = True  # flip-xy TTA for detection logits
     pool_kernel_um: float = 3.0  # max-pool kernel size in µm for detection peak extraction
+    tracking: str = "greedy"
     # Edge filtering
     edge_activation: str = "softmax"  # "sigmoid" or "softmax"
     threshold: float = 0.5
@@ -85,6 +86,8 @@ class PredictConfig:
     max_children_per_node: int | None = None
 
     def __post_init__(self) -> None:
+        if self.tracking != "greedy":
+            raise ValueError("this prediction script supports only tracking=greedy")
         # When ILP is enabled it handles parent/children constraints itself,
         # so greedy limits are left unconstrained (None).  When ILP is
         # disabled, default to 1/1 to avoid unconstrained edge assignment.
@@ -650,6 +653,8 @@ def main() -> None:
                              "threshold keeps precision up. Sweep it for your model.")
     parser.add_argument("--pool-kernel-um", type=float, default=None,
                         help="Detection max-pool size in microns. Overrides checkpoint config.")
+    parser.add_argument("--tracking", choices=("greedy",), default="greedy",
+                        help="Tracking/linking strategy (default: greedy).")
     parser.add_argument("--use-ilp", action="store_true",
                         help="Post-process the predicted graph with the tracksdata ILP "
                              "solver (global, flow-consistent linking) instead of greedy "
@@ -687,6 +692,7 @@ def main() -> None:
         cfg = PredictConfig(
             det_threshold=args.det_threshold,
             pool_kernel_um=pool_kernel_um,
+            tracking=args.tracking,
             use_ilp=args.use_ilp,
             ilp_edge_weight=args.ilp_edge_weight,
             ilp_appearance_weight=args.ilp_appearance_weight,

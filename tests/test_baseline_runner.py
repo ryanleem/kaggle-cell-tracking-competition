@@ -63,8 +63,11 @@ def _install_fake_runner_pipeline(
     expected_datasets: list[str],
     checkpoint_iters: list[int],
     missing_checkpoint: int | None = None,
+    checkpoint_scores: dict[int, float] | None = None,
+    stage_calls: list[tuple[str, list[str]]] | None = None,
 ) -> None:
     monkeypatch.setattr(runner, "REPO_ROOT", repo_root)
+    checkpoint_config_bytes = b'{"model": "periodic-regression", "version": 1}\n'
     monkeypatch.setattr(runner, "_git_provenance", lambda: {
         "commit": "deadbeef", "dirty": False, "status_porcelain": [],
     })
@@ -79,7 +82,11 @@ def _install_fake_runner_pipeline(
         provenance: dict[str, object],
         provenance_path: Path,
     ) -> None:
+        if stage_calls is not None:
+            stage_calls.append((stage, command))
         provenance.setdefault("stages", {})[stage] = {"returncode": 0, "wall_seconds": 0.0}
+        (run_dir / f"{stage}.stdout.log").write_text("fake stdout")
+        (run_dir / f"{stage}.stderr.log").write_text("")
         _write = runner._write_json
         _write(provenance_path, provenance)
         run_method = command_value(command, "--method") if "--method" in command else ""
@@ -88,7 +95,7 @@ def _install_fake_runner_pipeline(
             output_dir = repo_root / "weights" / run_method / "split_0"
             output_dir.mkdir(parents=True, exist_ok=True)
             (output_dir / "edge_predictor_best.pth").write_bytes(b"best")
-            (output_dir / "config.json").write_text("{}")
+            (output_dir / "config.json").write_bytes(checkpoint_config_bytes)
             history_records = []
             for iteration in checkpoint_iters:
                 filename = f"edge_predictor_iter_{iteration:06d}.pth"
@@ -104,18 +111,37 @@ def _install_fake_runner_pipeline(
             (output_dir / "training_history.jsonl").write_text(
                 "".join(json.dumps(record) + "\n" for record in history_records),
             )
-        elif stage == "prediction":
+        elif stage == "prediction" or stage.startswith("checkpoint_iter_") and stage.endswith("_prediction"):
+            if stage.startswith("checkpoint_iter_"):
+                checkpoint_path = Path(command_value(command, "--weights"))
+                periodic_config_path = checkpoint_path.parent / "config.json"
+                assert periodic_config_path.is_file()
+                assert periodic_config_path.read_bytes() == checkpoint_config_bytes
             username = runner.os.environ.get("USER", runner.os.environ.get("USERNAME", "unknown"))
             prediction_dir = repo_root / "predictions" / username / run_method / "split_0"
             prediction_dir.mkdir(parents=True, exist_ok=True)
             for dataset in expected_datasets:
                 (prediction_dir / f"{dataset}.geff").write_text("fake geff")
-        elif stage == "evaluation":
+        elif stage == "evaluation" or stage.startswith("checkpoint_iter_") and stage.endswith("_evaluation"):
             metrics_path = Path(command_value(command, "--json-out"))
+            iteration = int(stage.split("_")[2]) if stage.endswith("_evaluation") else None
+            metrics = {
+                "edge_tp": 1, "edge_fp": 0, "edge_fn": 0,
+                "num_pred_nodes": 1, "total_node_ratio": 0.0,
+                "node_recall": 1.0, "edge_jaccard": 1.0,
+                "adj_edge_jaccard": 1.0,
+            }
             metrics_path.write_text(json.dumps({
                 "evaluated_datasets": expected_datasets,
                 "skipped_datasets": [],
-                "summary_metrics": {"score": 1.0},
+                "per_dataset_metrics": [
+                    {"dataset": dataset, "metrics": metrics}
+                    for dataset in expected_datasets
+                ],
+                "summary_metrics": {
+                    "score": checkpoint_scores.get(iteration, 1.0)
+                    if checkpoint_scores is not None and iteration is not None else 1.0,
+                },
             }))
         elif stage == "geffs_to_csv":
             csv_path = Path(command_value(command, "--csv"))
@@ -314,7 +340,9 @@ def test_runner_fails_when_requested_periodic_checkpoint_is_missing(
         missing_checkpoint=2,
     )
     config_path = tmp_path / "config.json"
-    config_path.write_text(json.dumps(_make_runner_config(split_path, checkpoint_iters)))
+    config = _make_runner_config(split_path, checkpoint_iters)
+    config["max_iters"] = 3
+    config_path.write_text(json.dumps(config))
 
     with pytest.raises(runner.ExperimentError, match="periodic checkpoints missing"):
         runner.run_experiment(config_path, data_dir, tmp_path / "runs")
@@ -331,13 +359,19 @@ def test_runner_preserves_periodic_checkpoints_history_and_final_artifacts(
         monkeypatch, tmp_path / "repo", expected_datasets, checkpoint_iters,
     )
     config_path = tmp_path / "config.json"
-    config_path.write_text(json.dumps(_make_runner_config(split_path, checkpoint_iters)))
+    config = _make_runner_config(split_path, checkpoint_iters)
+    config["max_iters"] = 3
+    config_path.write_text(json.dumps(config))
 
     run_dir = runner.run_experiment(config_path, data_dir, tmp_path / "runs")
 
     expected_names = [f"edge_predictor_iter_{iteration:06d}.pth" for iteration in checkpoint_iters]
     preserved = run_dir / "checkpoints"
     assert [path.name for path in sorted(preserved.glob("*.pth"))] == expected_names
+    original_checkpoint_config = next((tmp_path / "repo" / "weights").glob("baseline_*/split_0/config.json"))
+    periodic_checkpoint_config = preserved / "config.json"
+    assert periodic_checkpoint_config.is_file()
+    assert periodic_checkpoint_config.read_bytes() == original_checkpoint_config.read_bytes()
     history_path = run_dir / "training_history.jsonl"
     assert history_path.is_file()
     records = [json.loads(line) for line in history_path.read_text().splitlines()]
@@ -348,6 +382,142 @@ def test_runner_preserves_periodic_checkpoints_history_and_final_artifacts(
         str(preserved / name) for name in expected_names
     ]
     assert final_result["artifacts"]["training_history"] == str(history_path)
+    assert final_result["artifacts"]["periodic_checkpoint_config"] == str(periodic_checkpoint_config)
+
+
+def test_runner_evaluates_all_periodic_checkpoints_selects_official_best_and_cleans_temps(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data_dir, split_path = _make_split_fixture(tmp_path)
+    fold, _ = runner._load_and_validate_split(split_path, data_dir, 0)
+    checkpoint_iters = [1, 2, 3]
+    stage_calls: list[tuple[str, list[str]]] = []
+    _install_fake_runner_pipeline(
+        monkeypatch,
+        tmp_path / "repo",
+        fold["test"],
+        checkpoint_iters,
+        checkpoint_scores={1: 0.8, 2: 0.9, 3: 0.9},
+        stage_calls=stage_calls,
+    )
+    config_path = tmp_path / "config.json"
+    config = _make_runner_config(split_path, checkpoint_iters)
+    config["max_iters"] = 3
+    config_path.write_text(json.dumps(config))
+
+    run_dir = runner.run_experiment(config_path, data_dir, tmp_path / "runs")
+
+    evaluations = json.loads((run_dir / "checkpoint_evaluations.json").read_text())
+    periodic_checkpoint_config = run_dir / "checkpoints" / "config.json"
+    original_checkpoint_config = next((tmp_path / "repo" / "weights").glob("baseline_*/split_0/config.json"))
+    assert evaluations["periodic_checkpoint_config_path"] == str(periodic_checkpoint_config)
+    assert periodic_checkpoint_config.is_file()
+    assert periodic_checkpoint_config.read_bytes() == original_checkpoint_config.read_bytes()
+    assert evaluations["selection_metric"] == "summary_metrics.score"
+    assert evaluations["selected_iteration"] == 3
+    assert evaluations["selected_checkpoint"] == "edge_predictor_iter_000003.pth"
+    assert [row["iteration"] for row in evaluations["evaluations"]] == checkpoint_iters
+    assert [row["summary_metrics"]["score"] for row in evaluations["evaluations"]] == [0.8, 0.9, 0.9]
+    assert all("edge_tp" in row["per_dataset_metrics"][0]["metrics"] for row in evaluations["evaluations"])
+    assert all(not Path(row["prediction_dir"]).exists() for row in evaluations["evaluations"])
+    assert all(Path(row["metrics_path"]).is_file() for row in evaluations["evaluations"])
+    assert all(
+        (Path(row["prediction_log_dir"]) / f"{row['prediction_stage']}.stdout.log").is_file()
+        and (Path(row["prediction_log_dir"]) / f"{row['evaluation_stage']}.stdout.log").is_file()
+        for row in evaluations["evaluations"]
+    )
+    periodic_prediction_commands = [
+        command for stage, command in stage_calls
+        if stage.startswith("checkpoint_iter_") and stage.endswith("_prediction")
+    ]
+    assert len(periodic_prediction_commands) == len(checkpoint_iters)
+    assert all(
+        Path(command[command.index("--weights") + 1]).parent / "config.json" == periodic_checkpoint_config
+        for command in periodic_prediction_commands
+    )
+    assert all(
+        row["periodic_checkpoint_config_path"] == str(periodic_checkpoint_config)
+        for row in evaluations["evaluations"]
+    )
+
+    official = run_dir / "checkpoint" / "edge_predictor_official_best.pth"
+    training_selected = run_dir / "checkpoint" / "edge_predictor_best.pth"
+    periodic_selected = run_dir / "checkpoints" / "edge_predictor_iter_000003.pth"
+    assert official.read_bytes() == periodic_selected.read_bytes()
+    assert official.read_bytes() != training_selected.read_bytes()
+
+    final_prediction_commands = [command for stage, command in stage_calls if stage == "prediction"]
+    assert len(final_prediction_commands) == 1
+    assert Path(final_prediction_commands[0][final_prediction_commands[0].index("--weights") + 1]) == official
+
+    provenance = json.loads((run_dir / "provenance.json").read_text())
+    final_result = json.loads((run_dir / "final_result.json").read_text())
+    for artifact in (provenance, final_result):
+        assert artifact["checkpoint_selection_metric"] == "summary_metrics.score"
+        assert artifact["selected_checkpoint_iteration"] == 3
+        assert artifact["selected_checkpoint_score"] == 0.9
+        assert artifact["selected_checkpoint_path"] == str(run_dir / "checkpoints" / "edge_predictor_iter_000003.pth")
+        assert artifact["checkpoint_evaluations_artifact_path"] == str(run_dir / "checkpoint_evaluations.json")
+        assert artifact["periodic_checkpoint_config_path"] == str(periodic_checkpoint_config)
+        assert artifact["training_selected_checkpoint_path"] == str(training_selected)
+        assert artifact["official_selected_checkpoint_path"] == str(official)
+    assert final_result["artifacts"]["periodic_checkpoint_config"] == str(periodic_checkpoint_config)
+
+
+def _valid_checkpoint_metrics() -> dict[str, object]:
+    return {
+        "evaluated_datasets": ["sample"],
+        "skipped_datasets": [],
+        "summary_metrics": {"score": 0.5},
+        "per_dataset_metrics": [{
+            "dataset": "sample",
+            "metrics": {
+                "edge_tp": 1, "edge_fp": 0, "edge_fn": 0,
+                "num_pred_nodes": 1, "total_node_ratio": 0.0,
+                "node_recall": 1.0, "edge_jaccard": 1.0,
+                "adj_edge_jaccard": 1.0,
+            },
+        }],
+    }
+
+
+@pytest.mark.parametrize(
+    "mutate,match",
+    [
+        (lambda report: report.pop("summary_metrics"), "summary_metrics"),
+        (lambda report: report["summary_metrics"].update(score=float("nan")), "not finite"),
+        (lambda report: report["summary_metrics"].update(score=None), "not finite"),
+        (lambda report: report.pop("per_dataset_metrics"), "per_dataset_metrics"),
+        (lambda report: report["per_dataset_metrics"][0]["metrics"].pop("edge_tp"), "per-dataset"),
+    ],
+)
+def test_checkpoint_metrics_validation_rejects_malformed_missing_or_nonfinite_reports(
+    tmp_path: Path, mutate, match: str,
+) -> None:
+    report = _valid_checkpoint_metrics()
+    mutate(report)
+    metrics_path = tmp_path / "metrics.json"
+    metrics_path.write_text(json.dumps(report, allow_nan=True))
+    with pytest.raises(runner.ExperimentError, match=match):
+        runner._validate_checkpoint_metrics(metrics_path, ["sample"])
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    [
+        ("evaluated_datasets", ["other"], "datasets differ"),
+        ("skipped_datasets", ["sample"], "skipped"),
+    ],
+)
+def test_checkpoint_metrics_validation_rejects_dataset_mismatch_and_skips(
+    tmp_path: Path, field: str, value: object, match: str,
+) -> None:
+    report = _valid_checkpoint_metrics()
+    report[field] = value
+    metrics_path = tmp_path / "metrics.json"
+    metrics_path.write_text(json.dumps(report))
+    with pytest.raises(runner.ExperimentError, match=match):
+        runner._validate_checkpoint_metrics(metrics_path, ["sample"])
 
 
 def test_validate_csv_enforces_repository_schema(tmp_path: Path) -> None:

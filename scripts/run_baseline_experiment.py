@@ -13,6 +13,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import os
 import random
 import shutil
@@ -21,6 +22,7 @@ import sys
 import time
 import uuid
 from datetime import datetime, timezone
+from numbers import Real
 from pathlib import Path
 from typing import Any
 
@@ -414,6 +416,239 @@ def build_commands(
     }
 
 
+def _build_prediction_command(
+    config: dict[str, Any],
+    run_method: str,
+    data_dir: Path,
+    split_path: Path,
+    checkpoint_path: Path,
+) -> list[str]:
+    """Build the repository prediction command for one fixed checkpoint."""
+    return [
+        str(sys.executable), str(PREDICT_SCRIPT),
+        "--method", run_method,
+        "--data-dir", str(data_dir),
+        "--splits", str(split_path),
+        "--split", str(config["split"]),
+        "--weights", str(checkpoint_path),
+        "--det-threshold", str(config["det_threshold"]),
+        "--pool-kernel-um", str(config["pool_kernel_um"]),
+        "--tracking", str(config["tracking"]),
+    ]
+
+
+def _build_checkpoint_evaluation_commands(
+    config: dict[str, Any],
+    method: str,
+    data_dir: Path,
+    split_path: Path,
+    checkpoint_path: Path,
+    prediction_dir: Path,
+    metrics_path: Path,
+) -> dict[str, list[str]]:
+    """Build prediction/evaluation commands for one periodic checkpoint."""
+    return {
+        "prediction": _build_prediction_command(
+            config, method, data_dir, split_path, checkpoint_path,
+        ),
+        "evaluation": [
+            str(sys.executable), str(EVALUATE_SCRIPT),
+            "--pred-dir", str(prediction_dir),
+            "--gt-dir", str(data_dir),
+            "--strict", "--json-out", str(metrics_path),
+        ],
+    }
+
+
+_REQUIRED_PER_DATASET_METRICS = {
+    "edge_tp", "edge_fp", "edge_fn", "num_pred_nodes", "total_node_ratio",
+    "node_recall", "edge_jaccard", "adj_edge_jaccard",
+}
+
+
+def _validate_checkpoint_metrics(
+    metrics_path: Path,
+    expected_datasets: list[str],
+) -> dict[str, Any]:
+    """Validate one strict official-evaluation JSON report and return it."""
+    try:
+        metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ExperimentError(
+            f"cannot read checkpoint evaluation metrics {metrics_path}: {exc}",
+        ) from exc
+    if not isinstance(metrics, dict):
+        raise ExperimentError(f"checkpoint evaluation metrics are not an object: {metrics_path}")
+
+    evaluated = metrics.get("evaluated_datasets")
+    if (
+        not isinstance(evaluated, list)
+        or not all(isinstance(name, str) for name in evaluated)
+        or len(evaluated) != len(expected_datasets)
+        or set(evaluated) != set(expected_datasets)
+    ):
+        raise ExperimentError(
+            f"checkpoint evaluation datasets differ from validation split: "
+            f"{evaluated} != {expected_datasets}",
+        )
+    skipped = metrics.get("skipped_datasets")
+    if not isinstance(skipped, list) or skipped != []:
+        raise ExperimentError(
+            f"checkpoint evaluation skipped validation datasets: {skipped}",
+        )
+
+    summary = metrics.get("summary_metrics")
+    if not isinstance(summary, dict):
+        raise ExperimentError(f"checkpoint evaluation summary_metrics is missing or malformed: {metrics_path}")
+    score = summary.get("score")
+    if isinstance(score, bool) or not isinstance(score, Real) or not math.isfinite(float(score)):
+        raise ExperimentError(f"checkpoint evaluation score is not finite: {score!r}")
+
+    per_dataset = metrics.get("per_dataset_metrics")
+    if not isinstance(per_dataset, list) or len(per_dataset) != len(expected_datasets):
+        raise ExperimentError(
+            f"checkpoint evaluation per_dataset_metrics is missing or incomplete: {metrics_path}",
+        )
+    per_dataset_names: list[str] = []
+    for row in per_dataset:
+        if not isinstance(row, dict) or not isinstance(row.get("dataset"), str):
+            raise ExperimentError(f"checkpoint evaluation has malformed per-dataset metrics: {metrics_path}")
+        row_metrics = row.get("metrics")
+        if not isinstance(row_metrics, dict) or not _REQUIRED_PER_DATASET_METRICS <= set(row_metrics):
+            raise ExperimentError(
+                f"checkpoint evaluation per-dataset metrics are incomplete for {row.get('dataset')!r}",
+            )
+        per_dataset_names.append(row["dataset"])
+    if len(set(per_dataset_names)) != len(expected_datasets) or set(per_dataset_names) != set(expected_datasets):
+        raise ExperimentError(
+            f"checkpoint per-dataset metrics differ from validation split: "
+            f"{per_dataset_names} != {expected_datasets}",
+        )
+    return metrics
+
+
+def _checkpoint_evaluation_method(run_method: str, iteration: int) -> str:
+    return f"{run_method}_checkpoint_iter_{iteration:06d}"
+
+
+def _checkpoint_evaluation_prediction_dir(
+    repo_root: Path, username: str, method: str, split: int,
+) -> Path:
+    return repo_root / "predictions" / username / method / f"split_{split}"
+
+
+def _remove_checkpoint_evaluation_predictions(
+    prediction_dir: Path, repo_root: Path, username: str, method: str, split: int,
+) -> None:
+    """Remove exactly one generated periodic-evaluation prediction directory."""
+    expected = _checkpoint_evaluation_prediction_dir(repo_root, username, method, split)
+    if prediction_dir.resolve() != expected.resolve():
+        raise ExperimentError(f"refusing to remove unexpected checkpoint prediction directory: {prediction_dir}")
+    if prediction_dir.exists():
+        if not prediction_dir.is_dir():
+            raise ExperimentError(f"checkpoint prediction path is not a directory: {prediction_dir}")
+        shutil.rmtree(prediction_dir)
+
+
+def _evaluate_periodic_checkpoints(
+    config: dict[str, Any],
+    data_dir: Path,
+    split_path: Path,
+    fold: dict[str, Any],
+    run_method: str,
+    username: str,
+    run_dir: Path,
+    periodic_checkpoint_paths: list[Path],
+    periodic_checkpoint_config_path: Path,
+    provenance: dict[str, Any],
+    provenance_path: Path,
+) -> dict[str, Any]:
+    """Evaluate, validate, preserve, and select every periodic checkpoint."""
+    if not periodic_checkpoint_config_path.is_file() or not _nonempty_path(periodic_checkpoint_config_path):
+        raise ExperimentError(
+            "periodic checkpoint config is missing or empty: "
+            f"{periodic_checkpoint_config_path}",
+        )
+    evaluation_root = run_dir / "checkpoint_evaluations"
+    evaluation_root.mkdir(parents=True, exist_ok=True)
+    records: list[dict[str, Any]] = []
+    checkpoint_iters = config["checkpoint_iters"]
+
+    for iteration, checkpoint_path in zip(checkpoint_iters, periodic_checkpoint_paths, strict=True):
+        method = _checkpoint_evaluation_method(run_method, iteration)
+        stage_dir = evaluation_root / f"iter_{iteration:06d}"
+        stage_dir.mkdir(parents=True, exist_ok=True)
+        prediction_dir = _checkpoint_evaluation_prediction_dir(
+            REPO_ROOT, username, method, int(config["split"]),
+        )
+        metrics_path = stage_dir / "metrics.json"
+        commands = _build_checkpoint_evaluation_commands(
+            config, method, data_dir, split_path, checkpoint_path,
+            prediction_dir, metrics_path,
+        )
+        prediction_stage = f"checkpoint_iter_{iteration:06d}_prediction"
+        evaluation_stage = f"checkpoint_iter_{iteration:06d}_evaluation"
+
+        _run_stage(prediction_stage, commands["prediction"], stage_dir, provenance, provenance_path)
+        prediction_validation = _prediction_stems(prediction_dir, fold["test"])
+        _run_stage(evaluation_stage, commands["evaluation"], stage_dir, provenance, provenance_path)
+        metrics = _validate_checkpoint_metrics(metrics_path, fold["test"])
+
+        record = {
+            "iteration": iteration,
+            "checkpoint_filename": checkpoint_path.name,
+            "checkpoint_path": str(checkpoint_path),
+            "periodic_checkpoint_config_path": str(periodic_checkpoint_config_path),
+            "method": method,
+            "prediction_dir": str(prediction_dir),
+            "metrics_path": str(metrics_path),
+            "prediction_stage": prediction_stage,
+            "evaluation_stage": evaluation_stage,
+            "prediction_log_dir": str(stage_dir),
+            "prediction_validation": prediction_validation,
+            "complete_metrics": metrics,
+            "summary_metrics": metrics["summary_metrics"],
+            "per_dataset_metrics": metrics["per_dataset_metrics"],
+            "prediction_wall_seconds": provenance["stages"][prediction_stage]["wall_seconds"],
+            "evaluation_wall_seconds": provenance["stages"][evaluation_stage]["wall_seconds"],
+        }
+        records.append(record)
+
+        # Metrics and logs have been written under run_dir and the record is
+        # durable before removing this iteration's uniquely named predictions.
+        _write_json(
+            run_dir / "checkpoint_evaluations.json",
+            {
+                "schema_version": 1,
+                "selection_metric": "summary_metrics.score",
+                "tie_rule": "later_iteration_wins_equal_scores",
+                "periodic_checkpoint_config_path": str(periodic_checkpoint_config_path),
+                "evaluations": records,
+            },
+        )
+        _remove_checkpoint_evaluation_predictions(
+            prediction_dir, REPO_ROOT, username, method, int(config["split"]),
+        )
+
+    selected = max(
+        records,
+        key=lambda record: (float(record["summary_metrics"]["score"]), record["iteration"]),
+    )
+    evaluation_report = {
+        "schema_version": 1,
+        "selection_metric": "summary_metrics.score",
+        "tie_rule": "later_iteration_wins_equal_scores",
+        "periodic_checkpoint_config_path": str(periodic_checkpoint_config_path),
+        "evaluations": records,
+        "selected_iteration": selected["iteration"],
+        "selected_checkpoint": selected["checkpoint_filename"],
+        "selected_checkpoint_path": selected["checkpoint_path"],
+        "selected_score": selected["summary_metrics"]["score"],
+    }
+    _write_json(run_dir / "checkpoint_evaluations.json", evaluation_report)
+    return evaluation_report
+
+
 def _run_logged_command(
     command: list[str],
     stdout_path: Path,
@@ -553,10 +788,21 @@ def run_experiment(
         _copy_path(checkpoint_path, run_dir / "checkpoint" / checkpoint_path.name)
         _copy_path(checkpoint_config, run_dir / "checkpoint" / "config.json")
 
-        periodic_checkpoint_paths: list[str] | None = None
+        periodic_checkpoint_paths: list[Path] | None = None
         training_history_path: str | None = None
+        official_checkpoint_path: Path | None = None
+        checkpoint_evaluations: dict[str, Any] | None = None
         if config.get("checkpoint_iters"):
             training_output_dir = checkpoint_path.parent
+            periodic_checkpoint_config_path = run_dir / "checkpoints" / "config.json"
+            _copy_path(checkpoint_config, periodic_checkpoint_config_path)
+            if not periodic_checkpoint_config_path.is_file() or not _nonempty_path(periodic_checkpoint_config_path):
+                raise ExperimentError(
+                    "periodic checkpoint config was not copied or is empty: "
+                    f"{periodic_checkpoint_config_path}",
+                )
+            provenance["periodic_checkpoint_config_path"] = str(periodic_checkpoint_config_path)
+            _write_json(provenance_path, provenance)
             history_source = training_output_dir / "training_history.jsonl"
             periodic_names = _validate_periodic_outputs(
                 training_output_dir,
@@ -567,10 +813,54 @@ def run_experiment(
             for name in periodic_names:
                 destination = run_dir / "checkpoints" / name
                 _copy_path(training_output_dir / name, destination)
-                periodic_checkpoint_paths.append(str(destination))
+                periodic_checkpoint_paths.append(destination)
             history_destination = run_dir / "training_history.jsonl"
             _copy_path(history_source, history_destination)
             training_history_path = str(history_destination)
+
+            checkpoint_evaluations = _evaluate_periodic_checkpoints(
+                config,
+                data_dir,
+                split_path,
+                fold,
+                run_method,
+                username,
+                run_dir,
+                periodic_checkpoint_paths,
+                periodic_checkpoint_config_path,
+                provenance,
+                provenance_path,
+            )
+            selected_iteration = checkpoint_evaluations["selected_iteration"]
+            selected_filename = checkpoint_evaluations["selected_checkpoint"]
+            selected_source = run_dir / "checkpoints" / selected_filename
+            if selected_source != Path(checkpoint_evaluations["selected_checkpoint_path"]):
+                raise ExperimentError(
+                    "checkpoint selection path does not refer to the preserved run checkpoint",
+                )
+            official_checkpoint_path = run_dir / "checkpoint" / "edge_predictor_official_best.pth"
+            _copy_path(selected_source, official_checkpoint_path)
+            if not official_checkpoint_path.is_file() or not _nonempty_path(official_checkpoint_path):
+                raise ExperimentError(f"official selected checkpoint was not copied: {official_checkpoint_path}")
+
+            # The original acc*recall-selected artifact remains at
+            # run_dir/checkpoint/edge_predictor_best.pth. Only the final
+            # prediction command switches to the official scorer-selected file.
+            commands["prediction"] = _build_prediction_command(
+                config, run_method, data_dir, split_path, official_checkpoint_path,
+            )
+            provenance["commands"] = _command_strings(commands)
+            provenance.update({
+                "checkpoint_selection_metric": checkpoint_evaluations["selection_metric"],
+                "selected_checkpoint_iteration": selected_iteration,
+                "selected_checkpoint_score": checkpoint_evaluations["selected_score"],
+                "selected_checkpoint_path": str(selected_source),
+                "checkpoint_evaluations_artifact_path": str(run_dir / "checkpoint_evaluations.json"),
+                "periodic_checkpoint_config_path": str(periodic_checkpoint_config_path),
+                "training_selected_checkpoint_path": str(run_dir / "checkpoint" / checkpoint_path.name),
+                "official_selected_checkpoint_path": str(official_checkpoint_path),
+            })
+            _write_json(provenance_path, provenance)
 
         _run_stage("prediction", commands["prediction"], run_dir, provenance, provenance_path)
         prediction_validation = _prediction_stems(prediction_dir, fold["test"])
@@ -627,20 +917,39 @@ def run_experiment(
             "resolved_config": str(resolved_config_path),
         }
         if periodic_checkpoint_paths is not None and training_history_path is not None:
-            artifacts["periodic_checkpoints"] = periodic_checkpoint_paths
+            artifacts["periodic_checkpoints"] = [str(path) for path in periodic_checkpoint_paths]
             artifacts["training_history"] = training_history_path
+            if checkpoint_evaluations is None or official_checkpoint_path is None:
+                raise ExperimentError("periodic checkpoint selection did not produce an official checkpoint")
+            artifacts["checkpoint"] = str(official_checkpoint_path)
+            artifacts["training_selected_checkpoint"] = str(run_dir / "checkpoint" / checkpoint_path.name)
+            artifacts["official_selected_checkpoint"] = str(official_checkpoint_path)
+            artifacts["checkpoint_evaluations"] = str(run_dir / "checkpoint_evaluations.json")
+            artifacts["periodic_checkpoint_config"] = str(periodic_checkpoint_config_path)
+        final_result = {
+            "status": "success",
+            "run_name": run_name,
+            "seed": config["seed"],
+            "git_commit": git["commit"],
+            "summary_metrics": metrics["summary_metrics"],
+            "roundtrip_summary_metrics": roundtrip_metrics["summary_metrics"],
+            "wall_seconds_total": elapsed,
+            "artifacts": artifacts,
+        }
+        if checkpoint_evaluations is not None and official_checkpoint_path is not None:
+            final_result.update({
+                "checkpoint_selection_metric": checkpoint_evaluations["selection_metric"],
+                "selected_checkpoint_iteration": checkpoint_evaluations["selected_iteration"],
+                "selected_checkpoint_score": checkpoint_evaluations["selected_score"],
+                "selected_checkpoint_path": checkpoint_evaluations["selected_checkpoint_path"],
+                "checkpoint_evaluations_artifact_path": str(run_dir / "checkpoint_evaluations.json"),
+                "periodic_checkpoint_config_path": str(periodic_checkpoint_config_path),
+                "training_selected_checkpoint_path": str(run_dir / "checkpoint" / checkpoint_path.name),
+                "official_selected_checkpoint_path": str(official_checkpoint_path),
+            })
         _write_json(
             run_dir / "final_result.json",
-            {
-                "status": "success",
-                "run_name": run_name,
-                "seed": config["seed"],
-                "git_commit": git["commit"],
-                "summary_metrics": metrics["summary_metrics"],
-                "roundtrip_summary_metrics": roundtrip_metrics["summary_metrics"],
-                "wall_seconds_total": elapsed,
-                "artifacts": artifacts,
-            },
+            final_result,
         )
     except Exception as exc:
         provenance["wall_seconds_total"] = time.monotonic() - started_all

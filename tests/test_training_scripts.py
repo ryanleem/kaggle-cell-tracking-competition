@@ -11,6 +11,7 @@ import tracksdata as td
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
+import train_unet_transformer as training_script
 from train_unet_transformer import train, DEFAULT_AUGMENTATIONS
 from predict_unet_transformer import predict_video, build_graph, load_model, PredictConfig
 from tracking_cellmot.io import open_dataset
@@ -37,6 +38,127 @@ _TEST_CONFIG = {
         "edge_activation": "softmax",
     },
 }
+
+
+def test_checkpoint_iters_parse_as_one_based_update_numbers() -> None:
+    assert training_script.parse_checkpoint_iters("500, 1000,2000, 5000") == [500, 1000, 2000, 5000]
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "500,abc",
+        "",
+        "500,500",
+        "0,500",
+        "1000,500",
+        "500,1001",
+    ],
+)
+def test_checkpoint_iters_reject_invalid_schedules(value: str) -> None:
+    if value == "500,1001":
+        with pytest.raises(ValueError, match="exceed max_iters"):
+            training_script.validate_checkpoint_iters(
+                training_script.parse_checkpoint_iters(value), max_iters=1000,
+            )
+    else:
+        with pytest.raises(ValueError):
+            training_script.parse_checkpoint_iters(value)
+
+
+def test_periodic_checkpoints_have_exact_names_normalized_keys_and_history(tmp_path: Path) -> None:
+    model = torch.nn.Module()
+    model.unet = torch.nn.Module()
+    model.unet.module = torch.nn.Linear(1, 1)
+    history_path = tmp_path / "training_history.jsonl"
+
+    with history_path.open("w", encoding="utf-8") as history_file:
+        for checkpoint_count, iteration in enumerate([500, 1000, 2000, 5000], start=1):
+            training_script._save_periodic_checkpoint(
+                model, tmp_path, history_file, iteration,
+                running_avg_edge_loss=0.1,
+                running_avg_detection_loss=0.2,
+                elapsed_training_seconds=float(iteration),
+            )
+            assert history_path.read_text(encoding="utf-8").count("\n") == checkpoint_count
+
+    expected_names = [
+        "edge_predictor_iter_000500.pth",
+        "edge_predictor_iter_001000.pth",
+        "edge_predictor_iter_002000.pth",
+        "edge_predictor_iter_005000.pth",
+    ]
+    assert [path.name for path in sorted(tmp_path.glob("edge_predictor_iter_*.pth"))] == expected_names
+    for name in expected_names:
+        state = torch.load(tmp_path / name, weights_only=True)
+        assert set(state) == {"unet.weight", "unet.bias"}
+        assert not any(key.startswith("unet.module.") for key in state)
+
+    records = [json.loads(line) for line in history_path.read_text(encoding="utf-8").splitlines()]
+    assert len(records) == 4
+    assert set(records[0]) == {
+        "iteration",
+        "running_avg_edge_loss",
+        "running_avg_detection_loss",
+        "checkpoint_filename",
+        "elapsed_training_seconds",
+    }
+    assert [record["iteration"] for record in records] == [500, 1000, 2000, 5000]
+    assert [record["checkpoint_filename"] for record in records] == expected_names
+
+
+def test_periodic_checkpoint_save_is_atomic_and_failure_leaves_no_history(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model = torch.nn.Linear(1, 1)
+    history_path = tmp_path / "training_history.jsonl"
+    real_save = training_script.torch.save
+    saved_paths: list[Path] = []
+
+    def recording_save(state: object, path: Path) -> None:
+        saved_paths.append(path)
+        real_save(state, path)
+
+    monkeypatch.setattr(training_script.torch, "save", recording_save)
+    with history_path.open("w+", encoding="utf-8") as history_file:
+        training_script._save_periodic_checkpoint(
+            model, tmp_path, history_file, 500, 0.1, 0.2, 1.0,
+        )
+    final_path = tmp_path / "edge_predictor_iter_000500.pth"
+    assert final_path.is_file()
+    assert saved_paths[0] != final_path
+    assert saved_paths[0].parent == tmp_path
+    assert not list(tmp_path.glob("*.tmp"))
+    assert len(history_path.read_text(encoding="utf-8").splitlines()) == 1
+
+    failure_dir = tmp_path / "failure"
+    failure_dir.mkdir()
+    failure_history = failure_dir / "training_history.jsonl"
+
+    def failing_save(state: object, path: Path) -> None:
+        raise RuntimeError("save failed")
+
+    monkeypatch.setattr(training_script.torch, "save", failing_save)
+    with failure_history.open("w+", encoding="utf-8") as history_file:
+        with pytest.raises(RuntimeError, match="save failed"):
+            training_script._save_periodic_checkpoint(
+                model, failure_dir, history_file, 1000, 0.1, 0.2, 2.0,
+            )
+    assert not (failure_dir / "edge_predictor_iter_001000.pth").exists()
+    assert failure_history.read_text(encoding="utf-8") == ""
+    assert not list(failure_dir.glob("*.tmp"))
+
+
+def test_train_rejects_periodic_checkpoints_for_multiple_epochs() -> None:
+    with pytest.raises(ValueError, match="n_epochs == 1"):
+        train(
+            data_dir=Path("missing"),
+            fold=0,
+            splits_file=Path("missing-splits.json"),
+            n_epochs=2,
+            max_iters=10,
+            checkpoint_iters=[5],
+        )
 
 
 def _seed_everything(seed: int = 42) -> None:

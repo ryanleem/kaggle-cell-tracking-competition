@@ -273,6 +273,75 @@ def _command_strings(command_map: dict[str, list[str]]) -> dict[str, list[str]]:
     return {name: [str(part) for part in command] for name, command in command_map.items()}
 
 
+def _validate_checkpoint_iters(config: dict[str, Any]) -> None:
+    """Validate the optional periodic checkpoint schedule in an experiment config."""
+    if "checkpoint_iters" not in config or config["checkpoint_iters"] is None:
+        return
+
+    values = config["checkpoint_iters"]
+    if not isinstance(values, list):
+        raise ExperimentError("config checkpoint_iters must be a list of integers")
+    if not values:
+        raise ExperimentError("config checkpoint_iters must not be empty")
+    if any(isinstance(value, bool) or not isinstance(value, int) for value in values):
+        raise ExperimentError("config checkpoint_iters must contain only integers")
+    if any(value <= 0 for value in values):
+        raise ExperimentError("config checkpoint_iters must contain only positive update numbers")
+    if len(values) != len(set(values)):
+        raise ExperimentError("config checkpoint_iters must not contain duplicates")
+    if values != sorted(values):
+        raise ExperimentError("config checkpoint_iters must be in strictly increasing order")
+
+    max_iters = config["max_iters"]
+    if isinstance(max_iters, bool) or not isinstance(max_iters, int):
+        raise ExperimentError("config max_iters must be an integer when checkpoint_iters is set")
+    if any(value > max_iters for value in values):
+        raise ExperimentError("config checkpoint_iters cannot exceed max_iters")
+    n_epochs = config["epochs"]
+    if isinstance(n_epochs, bool) or not isinstance(n_epochs, int):
+        raise ExperimentError("config epochs must be an integer when checkpoint_iters is set")
+    if n_epochs != 1:
+        raise ExperimentError("config checkpoint_iters currently requires epochs == 1")
+
+
+def _periodic_checkpoint_filename(iteration: int) -> str:
+    return f"edge_predictor_iter_{iteration:06d}.pth"
+
+
+def _validate_periodic_outputs(
+    checkpoint_dir: Path,
+    history_path: Path,
+    checkpoint_iters: list[int],
+) -> list[str]:
+    """Require and validate all periodic checkpoints emitted by training."""
+    expected_names = [_periodic_checkpoint_filename(iteration) for iteration in checkpoint_iters]
+    missing = [name for name in expected_names if not (checkpoint_dir / name).is_file()]
+    if missing:
+        raise ExperimentError(f"periodic checkpoints missing after training: {missing}")
+    if not history_path.is_file():
+        raise ExperimentError(f"training history not found after training: {history_path}")
+
+    try:
+        records = [json.loads(line) for line in history_path.read_text().splitlines()]
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ExperimentError(f"cannot read training history {history_path}: {exc}") from exc
+    if len(records) != len(expected_names):
+        raise ExperimentError(
+            f"training history has {len(records)} records; expected {len(expected_names)}",
+        )
+
+    required_fields = {
+        "iteration", "running_avg_edge_loss", "running_avg_detection_loss",
+        "checkpoint_filename", "elapsed_training_seconds",
+    }
+    for record, iteration, expected_name in zip(records, checkpoint_iters, expected_names):
+        if not isinstance(record, dict) or not required_fields <= set(record):
+            raise ExperimentError("training history contains a record with missing required fields")
+        if record["iteration"] != iteration or record["checkpoint_filename"] != expected_name:
+            raise ExperimentError("training history records are not ordered as requested checkpoints")
+    return expected_names
+
+
 def build_commands(
     config: dict[str, Any],
     run_method: str,
@@ -305,6 +374,11 @@ def build_commands(
         "--window-size", str(config["window_size"]),
         "--pool-kernel-um", str(config["pool_kernel_um"]),
     ]
+    if config.get("checkpoint_iters"):
+        train.extend([
+            "--checkpoint-iters",
+            ",".join(str(value) for value in config["checkpoint_iters"]),
+        ])
     predict = [
         str(sys.executable), str(PREDICT_SCRIPT), *common,
         "--weights", str(checkpoint_path),
@@ -393,6 +467,7 @@ def run_experiment(
     missing_config = sorted(required - set(config))
     if missing_config:
         raise ExperimentError(f"config missing required keys: {missing_config}")
+    _validate_checkpoint_iters(config)
     if config["tracking"] != "greedy":
         raise ExperimentError("this runner supports only tracking=greedy")
     if isinstance(config["seed"], bool) or not isinstance(config["seed"], int):
@@ -478,6 +553,25 @@ def run_experiment(
         _copy_path(checkpoint_path, run_dir / "checkpoint" / checkpoint_path.name)
         _copy_path(checkpoint_config, run_dir / "checkpoint" / "config.json")
 
+        periodic_checkpoint_paths: list[str] | None = None
+        training_history_path: str | None = None
+        if config.get("checkpoint_iters"):
+            training_output_dir = checkpoint_path.parent
+            history_source = training_output_dir / "training_history.jsonl"
+            periodic_names = _validate_periodic_outputs(
+                training_output_dir,
+                history_source,
+                config["checkpoint_iters"],
+            )
+            periodic_checkpoint_paths = []
+            for name in periodic_names:
+                destination = run_dir / "checkpoints" / name
+                _copy_path(training_output_dir / name, destination)
+                periodic_checkpoint_paths.append(str(destination))
+            history_destination = run_dir / "training_history.jsonl"
+            _copy_path(history_source, history_destination)
+            training_history_path = str(history_destination)
+
         _run_stage("prediction", commands["prediction"], run_dir, provenance, provenance_path)
         prediction_validation = _prediction_stems(prediction_dir, fold["test"])
         provenance["prediction_validation"] = prediction_validation
@@ -521,6 +615,20 @@ def run_experiment(
         provenance["wall_seconds_total"] = elapsed
         provenance["status"] = "success"
         _write_json(provenance_path, provenance)
+        artifacts = {
+            "checkpoint": str(run_dir / "checkpoint" / checkpoint_path.name),
+            "checkpoint_config": str(run_dir / "checkpoint" / "config.json"),
+            "predictions": str(run_dir / "predictions"),
+            "csv": str(run_dir / "predictions.csv"),
+            "reconstructed_predictions": str(run_dir / "reconstructed_predictions"),
+            "metrics": str(metrics_path),
+            "metrics_roundtrip": str(run_dir / "metrics_roundtrip.json"),
+            "provenance": str(provenance_path),
+            "resolved_config": str(resolved_config_path),
+        }
+        if periodic_checkpoint_paths is not None and training_history_path is not None:
+            artifacts["periodic_checkpoints"] = periodic_checkpoint_paths
+            artifacts["training_history"] = training_history_path
         _write_json(
             run_dir / "final_result.json",
             {
@@ -531,17 +639,7 @@ def run_experiment(
                 "summary_metrics": metrics["summary_metrics"],
                 "roundtrip_summary_metrics": roundtrip_metrics["summary_metrics"],
                 "wall_seconds_total": elapsed,
-                "artifacts": {
-                    "checkpoint": str(run_dir / "checkpoint" / checkpoint_path.name),
-                    "checkpoint_config": str(run_dir / "checkpoint" / "config.json"),
-                    "predictions": str(run_dir / "predictions"),
-                    "csv": str(run_dir / "predictions.csv"),
-                    "reconstructed_predictions": str(run_dir / "reconstructed_predictions"),
-                    "metrics": str(metrics_path),
-                    "metrics_roundtrip": str(run_dir / "metrics_roundtrip.json"),
-                    "provenance": str(provenance_path),
-                    "resolved_config": str(resolved_config_path),
-                },
+                "artifacts": artifacts,
             },
         )
     except Exception as exc:

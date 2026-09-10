@@ -14,9 +14,13 @@ Usage:
 
 import argparse
 import json
+import os
+import tempfile
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TextIO
 
 import numpy as np
 import polars as pl
@@ -115,6 +119,92 @@ from dataspec import WEIGHTS_PATH
 
 DEFAULT_METHOD = "unet_transformer"
 _POS_EMBED_DIM = 8   # per axis; total = 4 axes × _POS_EMBED_DIM = 32
+
+
+def validate_checkpoint_iters(
+    checkpoint_iters: list[int] | tuple[int, ...] | None,
+    max_iters: int | None = None,
+) -> list[int] | None:
+    """Validate one-based optimizer update numbers for periodic checkpoints."""
+    if checkpoint_iters is None:
+        return None
+    if not isinstance(checkpoint_iters, (list, tuple)):
+        raise ValueError("checkpoint_iters must be a list of integers")
+
+    values = list(checkpoint_iters)
+    if not values:
+        raise ValueError("checkpoint_iters must not be empty")
+    if any(isinstance(value, bool) or not isinstance(value, int) for value in values):
+        raise ValueError("checkpoint_iters must contain only integers")
+    if any(value <= 0 for value in values):
+        raise ValueError("checkpoint_iters must contain only positive update numbers")
+    if len(values) != len(set(values)):
+        raise ValueError("checkpoint_iters must not contain duplicates")
+    if values != sorted(values):
+        raise ValueError("checkpoint_iters must be in strictly increasing order")
+    if max_iters is not None and any(value > max_iters for value in values):
+        raise ValueError("checkpoint_iters cannot exceed max_iters")
+    return values
+
+
+def parse_checkpoint_iters(value: str | None) -> list[int] | None:
+    """Parse and validate comma-separated one-based optimizer update numbers."""
+    if value is None:
+        return None
+    if not value.strip():
+        raise ValueError("checkpoint_iters must not be empty")
+    try:
+        values = [int(part.strip()) for part in value.split(",")]
+    except ValueError as exc:
+        raise ValueError("checkpoint_iters must be comma-separated integers") from exc
+    return validate_checkpoint_iters(values)
+
+
+def _normalise_checkpoint_state(model: nn.Module) -> dict[str, torch.Tensor]:
+    """Strip the DataParallel UNet module prefix used during multi-GPU training."""
+    return {
+        k.replace("unet.module.", "unet.", 1): v
+        for k, v in model.state_dict().items()
+    }
+
+
+def _save_periodic_checkpoint(
+    model: nn.Module,
+    output_dir: Path,
+    history_file: TextIO,
+    iteration: int,
+    running_avg_edge_loss: float,
+    running_avg_detection_loss: float,
+    elapsed_training_seconds: float,
+) -> str:
+    """Save one periodic checkpoint and flush its structured history record."""
+    filename = f"edge_predictor_iter_{iteration:06d}.pth"
+    checkpoint_path = output_dir / filename
+    temp_fd, temp_name = tempfile.mkstemp(
+        prefix=f".{filename}.", suffix=".tmp", dir=output_dir,
+    )
+    os.close(temp_fd)
+    temp_path = Path(temp_name)
+    try:
+        torch.save(_normalise_checkpoint_state(model), temp_path)
+        os.replace(temp_path, checkpoint_path)
+        if not checkpoint_path.is_file():
+            raise OSError(f"periodic checkpoint was not created: {checkpoint_path}")
+    except Exception:
+        temp_path.unlink(missing_ok=True)
+        raise
+
+    record = {
+        "iteration": iteration,
+        "running_avg_edge_loss": running_avg_edge_loss,
+        "running_avg_detection_loss": running_avg_detection_loss,
+        "checkpoint_filename": filename,
+        "elapsed_training_seconds": elapsed_training_seconds,
+    }
+    history_file.write(json.dumps(record) + "\n")
+    history_file.flush()
+    os.fsync(history_file.fileno())
+    return filename
 
 
 # =============================================================================
@@ -794,6 +884,8 @@ def train_epoch(
     det_neg_weight: float = 0.1,
     max_iters: int | None = None,
     pool_kernel_um: float = 5.0,
+    checkpoint_iters: tuple[int, ...] = (),
+    checkpoint_callback: Callable[[int, float, float], None] | None = None,
 ) -> tuple[float, float]:
     """Train for one epoch, return (avg edge loss, avg detection loss).
 
@@ -815,7 +907,7 @@ def train_epoch(
     t_data, t_forward, t_backward = 0.0, 0.0, 0.0
     t0 = time.perf_counter()
 
-    for _ in pbar:
+    for update_index in pbar:
         batch = next(batch_iter)
 
         imgs = batch["imgs"].to(device, dtype=torch.float32, non_blocking=True)       # (B, W, *sp)
@@ -906,6 +998,14 @@ def train_epoch(
         total_edge_loss += edge_loss.item() * B
         total_det_loss += det_loss.item() * B
         n_samples += B
+
+        iteration = update_index + 1
+        if max_iters is not None and iteration in checkpoint_iters and checkpoint_callback is not None:
+            checkpoint_callback(
+                iteration,
+                total_edge_loss / max(n_samples, 1),
+                total_det_loss / max(n_samples, 1),
+            )
 
         t0 = time.perf_counter()
 
@@ -1023,6 +1123,7 @@ def train(
     det_loss_weight: float = 1e1,
     det_neg_weight: float = 1e-2,
     max_iters: int | None = None,
+    checkpoint_iters: list[int] | tuple[int, ...] | None = None,
     debug_video: Path | None = None,
     seed: int | None = None,
     max_frames: int | None = None,
@@ -1036,6 +1137,12 @@ def train(
     If *debug_video* is set the splits file is ignored and that single dataset
     is used for both train and test (quick sanity-check / overfitting run).
     """
+    checkpoint_iters = validate_checkpoint_iters(checkpoint_iters, max_iters)
+    if checkpoint_iters and max_iters is None:
+        raise ValueError("checkpoint_iters requires max_iters")
+    if checkpoint_iters and n_epochs != 1:
+        raise ValueError("checkpoint_iters currently requires n_epochs == 1")
+
     if unet_layers is None:
         unet_layers = [32, 64, 128]
 
@@ -1075,6 +1182,7 @@ def train(
         "window_size": window_size,
         "pool_kernel_um": pool_kernel_um,
         "seed": seed,
+        "checkpoint_iters": checkpoint_iters,
     }
     (output_dir / "config.json").write_text(json.dumps(model_config, indent=2))
 
@@ -1169,41 +1277,62 @@ def train(
 
     best_score = 0.0
     save_path = output_dir / "edge_predictor_best.pth"
+    history_file = None
+    if checkpoint_iters:
+        history_file = (output_dir / "training_history.jsonl").open("w", encoding="utf-8")
+    training_started = time.monotonic()
+
+    def _record_checkpoint(iteration: int, edge_loss: float, det_loss: float) -> None:
+        if history_file is None:
+            return
+        _save_periodic_checkpoint(
+            model,
+            output_dir,
+            history_file,
+            iteration,
+            edge_loss,
+            det_loss,
+            time.monotonic() - training_started,
+        )
+
     pbar = tqdm(range(n_epochs), desc="Training", disable=False)
     print(f"Detection loss: weight={det_loss_weight}, neg_weight={det_neg_weight}", flush=True)
 
-    for epoch in pbar:
-        t0 = time.monotonic()
-        edge_loss, det_loss = train_epoch(
-            model, train_loader, optimizer, device, det_loss_weight, det_neg_weight,
-            max_iters=max_iters, pool_kernel_um=pool_kernel_um,
-        )
-        train_time = time.monotonic() - t0
-
-        t0 = time.monotonic()
-        test_loss, test_acc, test_recall = evaluate(model, test_loader, device, pool_kernel_um=pool_kernel_um)
-        test_time = time.monotonic() - t0
-
-        score = test_acc * test_recall
-        is_best = score >= best_score
-
-        if is_best:
-            best_score = score
-            # Normalise any DataParallel "unet.module." prefix to "unet." so the
-            # checkpoint loads on a single GPU (e.g. in the prediction script).
-            torch.save(
-                {k.replace("unet.module.", "unet.", 1): v for k, v in model.state_dict().items()},
-                save_path,
+    try:
+        for epoch in pbar:
+            t0 = time.monotonic()
+            edge_loss, det_loss = train_epoch(
+                model, train_loader, optimizer, device, det_loss_weight, det_neg_weight,
+                max_iters=max_iters, pool_kernel_um=pool_kernel_um,
+                checkpoint_iters=tuple(checkpoint_iters or ()),
+                checkpoint_callback=_record_checkpoint if checkpoint_iters else None,
             )
+            train_time = time.monotonic() - t0
 
-        marker = "*" if is_best else " "
-        pbar.set_postfix(edge=f"{edge_loss:.4f}", det=f"{det_loss:.4f}", acc=f"{test_acc:.4f}")
-        print(
-            f"  Epoch {epoch:3d}/{n_epochs} | edge={edge_loss:.4f} | det={det_loss:.4f} | "
-            f"test_loss={test_loss:.4f} | acc={test_acc:.4f} | recall={test_recall:.4f} | best={best_score:.4f} {marker} | "
-            f"train={train_time:.1f}s test={test_time:.1f}s",
-            flush=True,
-        )
+            t0 = time.monotonic()
+            test_loss, test_acc, test_recall = evaluate(model, test_loader, device, pool_kernel_um=pool_kernel_um)
+            test_time = time.monotonic() - t0
+
+            score = test_acc * test_recall
+            is_best = score >= best_score
+
+            if is_best:
+                best_score = score
+                # Normalise any DataParallel "unet.module." prefix to "unet." so the
+                # checkpoint loads on a single GPU (e.g. in the prediction script).
+                torch.save(_normalise_checkpoint_state(model), save_path)
+
+            marker = "*" if is_best else " "
+            pbar.set_postfix(edge=f"{edge_loss:.4f}", det=f"{det_loss:.4f}", acc=f"{test_acc:.4f}")
+            print(
+                f"  Epoch {epoch:3d}/{n_epochs} | edge={edge_loss:.4f} | det={det_loss:.4f} | "
+                f"test_loss={test_loss:.4f} | acc={test_acc:.4f} | recall={test_recall:.4f} | best={best_score:.4f} {marker} | "
+                f"train={train_time:.1f}s test={test_time:.1f}s",
+                flush=True,
+            )
+    finally:
+        if history_file is not None:
+            history_file.close()
 
     print(f"\nBest score (acc*recall): {best_score:.4f}, saved to {save_path}", flush=True)
     if save_path.exists():
@@ -1247,6 +1376,8 @@ def main() -> None:
                         help="Per-voxel weight for non-GT (negative) voxels in detection loss (default: 1e-2).")
     parser.add_argument("--max-iters", type=int, default=None,
                         help="Max training iterations per epoch. None = full epoch.")
+    parser.add_argument("--checkpoint-iters", type=parse_checkpoint_iters, default=None,
+                        help="Comma-separated one-based optimizer updates to preserve (requires --max-iters).")
     parser.add_argument("--seed", type=int, default=None,
                         help="Optional seed for the existing DataLoader seeding path.")
     parser.add_argument("--debug-video", type=str, default=None,
@@ -1276,6 +1407,7 @@ def main() -> None:
     unet_weights = Path(args.unet_weights) if args.unet_weights else None
     debug_video = Path(args.debug_video) if args.debug_video else None
     downsample = tuple(int(x) for x in args.downsample.split(","))
+    validate_checkpoint_iters(args.checkpoint_iters, args.max_iters)
 
     folds = [0] if debug_video is not None else (
         range(5) if args.split == "all" else [int(args.split)]
@@ -1297,6 +1429,7 @@ def main() -> None:
             det_loss_weight=args.det_loss_weight,
             det_neg_weight=args.det_neg_weight,
             max_iters=args.max_iters,
+            checkpoint_iters=args.checkpoint_iters,
             seed=args.seed,
             debug_video=debug_video,
             window_size=args.window_size,

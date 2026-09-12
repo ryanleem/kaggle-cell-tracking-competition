@@ -40,6 +40,23 @@ _TEST_CONFIG = {
 }
 
 
+def test_baseline_pilot_10000_config_matches_pilot_5000_except_schedule() -> None:
+    config_dir = Path(__file__).resolve().parents[1] / "experiments" / "configs"
+    config_path = config_dir / "baseline_pilot_10000.json"
+    assert config_path.is_file()
+
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    source = json.loads((config_dir / "baseline_pilot_5000.json").read_text(encoding="utf-8"))
+    assert config["max_iters"] == 10000
+    assert config["checkpoint_iters"] == [5000, 7500, 10000]
+    assert config["method"] == "baseline_pilot_10000"
+
+    changed_keys = {"method", "max_iters", "checkpoint_iters"}
+    assert {key: value for key, value in config.items() if key not in changed_keys} == {
+        key: value for key, value in source.items() if key not in changed_keys
+    }
+
+
 def test_checkpoint_iters_parse_as_one_based_update_numbers() -> None:
     assert training_script.parse_checkpoint_iters("500, 1000,2000, 5000") == [500, 1000, 2000, 5000]
 

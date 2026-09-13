@@ -36,8 +36,6 @@ import tracksdata as td
 from tracking_cellmot.io import invert_time_graph, open_dataset
 from tracking_cellmot.models import SimpleNodeTransformer, TemporalUNet3D
 
-from itertools import cycle as _cycle
-
 
 def compute_gt_transition_matrix(
     gt_ids_t: np.ndarray,
@@ -889,26 +887,56 @@ def train_epoch(
 ) -> tuple[float, float]:
     """Train for one epoch, return (avg edge loss, avg detection loss).
 
-    When *max_iters* is set, the loader is cycled repeatedly until that many
-    iterations have been performed, regardless of dataset size.
+    When *max_iters* is set, restart the loader on exhaustion until that many
+    updates have been performed. Never cache batches: image tensors can be huge.
     """
     model.train()
     total_edge_loss = 0.0
     total_det_loss = 0.0
     n_samples = 0
 
+    batch_iter = iter(loader)
     if max_iters is not None:
-        batch_iter = _cycle(loader)
         pbar = tqdm(range(max_iters), desc="  iters", leave=False, disable=False)
     else:
-        batch_iter = iter(loader)
         pbar = tqdm(range(len(loader)), desc="  batches", leave=False, disable=False)
 
     t_data, t_forward, t_backward = 0.0, 0.0, 0.0
     t0 = time.perf_counter()
+    epoch_started = t0
+
+    def log_progress(completed_update: int, phase: str, event: str = "") -> None:
+        print(
+            f"  [progress] {event}completed_update={completed_update} phase={phase} "
+            f"elapsed={time.perf_counter() - epoch_started:.3f}s "
+            f"data={t_data:.3f}s forward={t_forward:.3f}s backward={t_backward:.3f}s "
+            f"edge={total_edge_loss / max(n_samples, 1):.6f} "
+            f"det={total_det_loss / max(n_samples, 1):.6f}",
+            flush=True,
+        )
 
     for update_index in pbar:
-        batch = next(batch_iter)
+        iteration = update_index + 1
+        detailed_progress = (
+            iteration == 1 or iteration % 100 == 0
+            or iteration in checkpoint_iters
+            or iteration == (max_iters if max_iters is not None else len(loader))
+        )
+        if detailed_progress:
+            log_progress(update_index, "data", f"next_update={iteration} ")
+        try:
+            batch = next(batch_iter)
+        except StopIteration:
+            if max_iters is None:
+                raise
+            # A fresh iterator preserves DataLoader sampling/worker semantics,
+            # including fresh augmentation, without retaining an epoch of images.
+            log_progress(update_index, "data", f"restarting_loader next_update={iteration} ")
+            batch_iter = iter(loader)
+            try:
+                batch = next(batch_iter)
+            except StopIteration as exc:
+                raise ValueError("training DataLoader yielded no batches") from exc
 
         imgs = batch["imgs"].to(device, dtype=torch.float32, non_blocking=True)       # (B, W, *sp)
         coords = batch["coords"].to(device, non_blocking=True)                         # (B, W, M, 3)
@@ -923,6 +951,8 @@ def train_epoch(
             torch.cuda.synchronize()
         t1 = time.perf_counter()
         t_data += t1 - t0
+        if detailed_progress:
+            log_progress(update_index, "forward", f"update={iteration} ")
 
         B, W = imgs.shape[:2]
 
@@ -984,6 +1014,8 @@ def train_epoch(
             torch.cuda.synchronize()
         t2 = time.perf_counter()
         t_forward += t2 - t1
+        if detailed_progress:
+            log_progress(update_index, "backward", f"update={iteration} ")
 
         optimizer.zero_grad()
         loss.backward()
@@ -999,12 +1031,20 @@ def train_epoch(
         total_det_loss += det_loss.item() * B
         n_samples += B
 
-        iteration = update_index + 1
+        if detailed_progress:
+            log_progress(iteration, "complete")
         if max_iters is not None and iteration in checkpoint_iters and checkpoint_callback is not None:
+            checkpoint_started = time.perf_counter()
+            log_progress(iteration, "checkpoint", f"checkpoint_start update={iteration} ")
             checkpoint_callback(
                 iteration,
                 total_edge_loss / max(n_samples, 1),
                 total_det_loss / max(n_samples, 1),
+            )
+            log_progress(
+                iteration, "complete",
+                f"checkpoint_complete update={iteration} "
+                f"seconds={time.perf_counter() - checkpoint_started:.3f} ",
             )
 
         t0 = time.perf_counter()

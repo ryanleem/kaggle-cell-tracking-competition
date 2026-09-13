@@ -116,6 +116,98 @@ def test_prediction_cli_passes_checkpoint_pool_and_source(
     assert calls[0]["pool_kernel_source"] == "checkpoint config"
 
 
+@pytest.mark.parametrize(
+    ("value", "valid"),
+    [
+        (0.0, True), (1.0, True), (0.5, True), (0.52, True),
+        (-0.0001, False), (1.0001, False),
+        (float("nan"), False), (float("inf"), False), (float("-inf"), False),
+    ],
+)
+def test_validate_unit_threshold_bounds(value: float, valid: bool) -> None:
+    if valid:
+        assert prediction_script._validate_unit_threshold("--x", value) == value
+    else:
+        with pytest.raises(ValueError, match="--x"):
+            prediction_script._validate_unit_threshold("--x", value)
+
+
+def test_validate_unit_threshold_rejects_non_numeric_types() -> None:
+    with pytest.raises(ValueError):
+        prediction_script._validate_unit_threshold("--x", True)
+    with pytest.raises(ValueError):
+        prediction_script._validate_unit_threshold("--x", "0.5")
+
+
+def test_edge_threshold_cli_forwards_into_predict_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[dict] = []
+    monkeypatch.setattr(
+        prediction_script, "_load_model_config", lambda path: ({}, False),
+    )
+    monkeypatch.setattr(prediction_script, "predict", lambda **kwargs: calls.append(kwargs))
+    monkeypatch.setattr(
+        sys, "argv",
+        [
+            "predict_unet_transformer.py",
+            "--weights", str(tmp_path / "weights.pth"),
+            "--det-threshold", "0.64",
+            "--edge-threshold", "0.35",
+        ],
+    )
+
+    prediction_script.main()
+
+    cfg = calls[0]["cfg"]
+    assert cfg.threshold == 0.35
+    assert cfg.det_threshold == 0.64
+
+
+def test_edge_threshold_omitted_preserves_default_predict_config_behavior(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Omitting --edge-threshold must not change any existing inference behavior."""
+    calls: list[dict] = []
+    monkeypatch.setattr(
+        prediction_script, "_load_model_config", lambda path: ({}, False),
+    )
+    monkeypatch.setattr(prediction_script, "predict", lambda **kwargs: calls.append(kwargs))
+    monkeypatch.setattr(
+        sys, "argv",
+        ["predict_unet_transformer.py", "--weights", str(tmp_path / "weights.pth")],
+    )
+
+    prediction_script.main()
+
+    cfg = calls[0]["cfg"]
+    default_cfg = prediction_script.PredictConfig()
+    assert cfg.threshold == default_cfg.threshold == 0.5
+    assert cfg.det_threshold == 0.99  # unchanged CLI default
+
+
+@pytest.mark.parametrize(
+    "extra_args",
+    [
+        ["--edge-threshold", "1.5"],
+        ["--edge-threshold", "-0.1"],
+        ["--det-threshold", "1.5"],
+    ],
+)
+def test_invalid_thresholds_rejected_by_cli(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, extra_args: list[str],
+) -> None:
+    monkeypatch.setattr(prediction_script, "predict", lambda **kwargs: None)
+    monkeypatch.setattr(
+        sys, "argv",
+        ["predict_unet_transformer.py", "--weights", str(tmp_path / "weights.pth"), *extra_args],
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        prediction_script.main()
+    assert exc_info.value.code != 0
+
+
 _SUMMARY = {
     "n": 1,
     "score": 0.0,

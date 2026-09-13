@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "description": "Staged, compute-conscious inference-threshold calibration for the unet_transformer checkpoints saved at iterations 7500 and 10000.",
+  "current_det_threshold": 0.52,
+  "edge_threshold_default": 0.50,
+  "pool_kernel_um": 5.0,
+  "tracking": "greedy",
+  "subset_split_file": "experiments/splits/calibration_subset_fold0.json",
+  "subset_split": 0,
+  "subset_dataset_names": [
+    "44b6_d5e7d891",
+    "44b6_d754aa59",
+    "44b6_e57ff5c6",
+    "6bba_268e1230",
+    "6bba_3a1849c2",
+    "6bba_afb141ff"
+  ],
+  "full_split_file": "experiments/splits/baseline_fold0_seed0.json",
+  "full_split": 0,
+  "stage_a": {
+    "checkpoint_labels": ["10000"],
+    "det_thresholds": [0.52, 0.58, 0.64, 0.70],
+    "edge_thresholds": [0.50],
+    "n_best_det_thresholds": 2
+  },
+  "stage_b": {
+    "checkpoint_labels": ["10000"],
+    "edge_thresholds": [0.35, 0.45, 0.50, 0.55, 0.65],
+    "n_best_pairs": 2
+  },
+  "stage_c": {
+    "checkpoint_labels": ["7500", "10000"]
+  },
+  "selection_metric": "summary_metrics.score",
+  "tie_break": {
+    "description": "Sort by score descending; break ties by ascending value of the field(s) listed for the stage, then by stable original trial order.",
+    "stage_a": ["det_threshold"],
+    "stage_b": ["edge_threshold", "det_threshold"],
+    "stage_c": ["edge_threshold", "det_threshold", "checkpoint_label"]
+  }
+}

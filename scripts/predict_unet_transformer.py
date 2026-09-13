@@ -8,6 +8,7 @@ Usage:
 import argparse
 import contextlib
 import json
+import math
 import os
 import sys
 from dataclasses import dataclass
@@ -102,6 +103,18 @@ class PredictConfig:
 # =============================================================================
 # Helpers
 # =============================================================================
+
+
+def _validate_unit_threshold(name: str, value: float) -> float:
+    """Validate a probability threshold: must be a finite float within [0, 1]."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{name} must be a number, got {value!r}")
+    value = float(value)
+    if not math.isfinite(value):
+        raise ValueError(f"{name} must be finite, got {value!r}")
+    if not (0.0 <= value <= 1.0):
+        raise ValueError(f"{name} must be within [0, 1], got {value!r}")
+    return value
 
 
 @contextlib.contextmanager
@@ -651,6 +664,10 @@ def main() -> None:
                              "Default 0.99: the detector is poorly calibrated because the "
                              "ground truth is sparse (only some cells annotated), so a high "
                              "threshold keeps precision up. Sweep it for your model.")
+    parser.add_argument("--edge-threshold", type=float, default=None,
+                        help="Minimum edge probability to keep a link (PredictConfig.threshold). "
+                             "Default: PredictConfig's built-in default (0.50), preserving existing "
+                             "behavior when omitted.")
     parser.add_argument("--pool-kernel-um", type=float, default=None,
                         help="Detection max-pool size in microns. Overrides checkpoint config.")
     parser.add_argument("--tracking", choices=("greedy",), default="greedy",
@@ -669,6 +686,13 @@ def main() -> None:
                         help="ILP: cost of a division; lower to allow more splits (default 1.0).")
 
     args = parser.parse_args()
+
+    try:
+        _validate_unit_threshold("--det-threshold", args.det_threshold)
+        if args.edge_threshold is not None:
+            _validate_unit_threshold("--edge-threshold", args.edge_threshold)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     from dataspec import DATASET_PATH
     data_dir = Path(args.data_dir) if args.data_dir else Path(DATASET_PATH)
@@ -689,7 +713,7 @@ def main() -> None:
         pool_kernel_um, pool_kernel_source = resolve_pool_kernel_um(
             args.pool_kernel_um, checkpoint_config, has_pool_kernel,
         )
-        cfg = PredictConfig(
+        cfg_kwargs = dict(
             det_threshold=args.det_threshold,
             pool_kernel_um=pool_kernel_um,
             tracking=args.tracking,
@@ -699,6 +723,12 @@ def main() -> None:
             ilp_disappearance_weight=args.ilp_disappearance_weight,
             ilp_division_weight=args.ilp_division_weight,
         )
+        # Only override PredictConfig.threshold (the edge threshold) when the
+        # caller explicitly passes --edge-threshold; otherwise the dataclass
+        # default (0.50) is used, preserving existing behavior.
+        if args.edge_threshold is not None:
+            cfg_kwargs["threshold"] = args.edge_threshold
+        cfg = PredictConfig(**cfg_kwargs)
         predict(
             data_dir=data_dir,
             fold=fold,

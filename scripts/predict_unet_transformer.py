@@ -25,9 +25,9 @@ import tracksdata as td
 
 from tracking_cellmot.io import open_dataset, save_graph
 
-# Import model and helpers from companion training script.
+# Shared architecture has no training dependencies.
 sys.path.insert(0, str(Path(__file__).parent))
-from train_unet_transformer import (
+from tracking_cellmot.unet_transformer import (
     DEFAULT_METHOD,
     UNetNodeTransformer,
     extract_pos_features,
@@ -555,6 +555,7 @@ def predict(
     video_slice: slice | None = None,
     evaluate: bool = False,
     pool_kernel_source: str = "caller",
+    output_dir: Path | None = None,
 ) -> None:
     """Run inference on the test split and save predictions as .geff files."""
     if debug_video is not None:
@@ -567,7 +568,7 @@ def predict(
             test_names = test_names[video_slice]
 
     from dataspec import PREDICTIONS_PATH
-    output_dir = PREDICTIONS_PATH / USERNAME / method / f"split_{fold}"
+    output_dir = output_dir if output_dir is not None else PREDICTIONS_PATH / USERNAME / method / f"split_{fold}"
     if output_dir.exists():
         import shutil
         for old in output_dir.glob("*.geff"):
@@ -587,7 +588,7 @@ def predict(
     )
 
     for name in tqdm(test_names, desc="Predicting", disable=not INTERACTIVE):
-        ds_path = data_dir / name
+        ds_path = data_dir / f"{name}.zarr"
         coords, edges = predict_video(
                 model, ds_path, device,
                 cfg=cfg,
@@ -640,6 +641,8 @@ def main() -> None:
         description="Run UNet + transformer edge prediction.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    parser.add_argument("--output-dir", type=Path, default=None,
+                        help="Explicit directory for prediction GEFFs.")
     parser.add_argument("--method", type=str, default=DEFAULT_METHOD)
     parser.add_argument("--data-dir", type=str, default=None,
                         help="Default: DATASET_PATH")
@@ -741,6 +744,7 @@ def main() -> None:
             video_slice=video_slice,
             evaluate=args.evaluate,
             pool_kernel_source=pool_kernel_source,
+            output_dir=args.output_dir,
         )
 
 

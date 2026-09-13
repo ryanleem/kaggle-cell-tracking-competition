@@ -221,3 +221,36 @@ Each dataset is a `{name}.zarr` image with a paired `{name}.geff` track graph in
 For visualization (optional):
 
 - Napari
+
+### Reviewed calibrated submission (inference only)
+
+Run from any working directory, using the absolute script path when outside this
+checkout and the environment with this project installed:
+
+```bash
+python /path/to/repo/scripts/run_calibrated_submission.py \
+    --data-dir /kaggle/input/competitions/biohub-cell-tracking-during-development/test \
+    --checkpoint /path/to/edge_predictor_iter_010000.pth \
+    --output-dir /kaggle/working
+```
+
+The reviewed configuration is
+`experiments/configs/calibrated_submission_t070_e035.json`: 10,000 updates,
+detection 0.70, edge 0.35, greedy tracking, official 19-dataset validation score
+0.6342184184725667 (calibration commit
+`404e3d31836cdd6e9cd63cf9be5c72cab790202d`). The runner verifies the exact checkpoint
+SHA256 and requires an adjacent JSON object in `config.json`. It dynamically
+discovers test Zarr directories, including nested directories, and rejects duplicate
+dataset names. No dataset IDs or training fallback are embedded in the runner.
+
+Upload only `<output-dir>/submission.csv`. It appears after exact GEFF coverage
+and strict CSV validation succeed. `submission_provenance.json` records the
+checkpoint/config hashes, commands, dataset counts, timings, output hash, Git commit,
+and `training_performed=false`. Git must be available with this checkout's metadata.
+Subprocess logs remain in the output directory; console output streams with a
+30-second heartbeat. Each invocation removes the previous final CSV and success
+record before checking inputs, and cleans only its own temporary scratch directory.
+Use a dedicated output directory. An exclusive `.calibrated-submission.lock` prevents
+concurrent runs; after a forcibly killed process, remove that exact lock file only
+once the process has stopped. A hard kill can leave its uniquely named scratch
+folder, which can likewise be removed once the process is confirmed stopped.

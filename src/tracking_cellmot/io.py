@@ -73,8 +73,8 @@ def open_dataset(ds_path: Path | str,
     if ds_path.suffix in (".zarr", ".geff"):
         ds_path = ds_path.parent / ds_path.stem
 
-    image_path = ds_path.parent / f"{ds_path.stem}.zarr"
-    tracks_path = ds_path.parent / f"{ds_path.stem}.geff"
+    image_path = ds_path.parent / f"{ds_path.name}.zarr"
+    tracks_path = ds_path.parent / f"{ds_path.name}.geff"
 
     if not image_path.exists():
         raise FileNotFoundError(f"Image file not found: {image_path}")

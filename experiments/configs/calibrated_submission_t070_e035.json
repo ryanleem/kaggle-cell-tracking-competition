@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "checkpoint": "edge_predictor_iter_010000.pth",
+  "checkpoint_updates": 10000,
+  "checkpoint_sha256": "d6a0221948a6335f581ec12b509bc529672b99f0dfcd6c393be3f1a01a9c7d96",
+  "checkpoint_config_sha256": "b9c71baa3e2d5523b420e419eae8c56f5598917f36bbfecbe9cc2703598b8a6c",
+  "det_threshold": 0.70,
+  "edge_threshold": 0.35,
+  "split": 0,
+  "tracking": "greedy",
+  "official_validation_datasets": 19,
+  "official_validation_score": 0.6342184184725667,
+  "calibration_commit": "404e3d31836cdd6e9cd63cf9be5c72cab790202d",
+  "training_performed": false
+}

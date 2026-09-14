@@ -12,7 +12,7 @@ quantization. This measures collision risk, not guaranteed merging. A cKDTree
 per frame avoids a quadratic distance matrix. Ties use the tree's choice on
 lexicographically sorted coordinates, making results independent of graph order.
 
-Two collision-risk metrics are reported per pooling kernel:
+Three collision-risk metrics are reported per pooling kernel:
 nearest_neighbor_collision_risk only checks whether each node's Euclidean-
 nearest same-frame neighbor lies inside its axis-aligned half-window, and can
 undercount when that nearest neighbor is outside the box but another neighbor
@@ -20,12 +20,21 @@ is inside it. any_neighbor_collision_risk instead checks every same-frame
 neighbor: cKDTree.query_pairs(r=norm(half_width)) finds Euclidean-radius
 candidates (a safe superset, since a box corner is the farthest point in the
 box from its center), and an exact per-axis inclusive box test on those
-candidates decides which pairs actually qualify. Both metrics use continuous
-physical GT coordinates (frame-relative Euclidean nearest neighbor times
-dataset scale); training's own coordinate quantization happens later, against
-the network's downsampled spatial grid (see compute_detection_loss in
-train_unet_transformer.py), which this audit does not have access to without
-loading images, so it is not reproduced here.
+candidates decides which pairs actually qualify. Both of the above use
+continuous physical GT coordinates (frame-relative Euclidean nearest neighbor
+times dataset scale) and never quantize.
+
+quantized_target_collision_risk instead reproduces training's own GT-to-
+target-voxel mapping exactly, in the network's downsampled index space: as in
+get_window_data, original z,y,x are cast to float32 and divided by a float32
+downsample; as in compute_detection_loss, the result is truncated toward zero
+(matching torch.long()) and clamped to the downsampled spatial shape, which
+open_dataset computes by ceiling-dividing the raw shape by the downsample
+strides. Nodes that truncate to the same voxel collapse onto a single
+training target and are undetectable as separate GT; this audit reports that
+collapse (unique target voxels, duplicate-voxel count, collapsed-node count)
+alongside a same-kernel query_pairs collision check on the quantized grid
+(exact per-axis integer difference <= kernel // 2).
 """
 
 from __future__ import annotations
@@ -57,7 +66,28 @@ def positive_triplet(values, name, *, integer=False):
     return arr
 
 
-def summarize(distances, counts, nearest_risks, any_node_counts, any_pair_counts, requested):
+def downsampled_spatial_shape(raw_shape, downsample):
+    """Ceiling-divided (Z, Y, X) shape, matching open_dataset's own downsample math."""
+    return tuple(-(-int(s) // int(d)) for s, d in zip(raw_shape, downsample))
+
+
+def quantize_target_coords(raw_zyx, downsample, spatial_shape):
+    """Reproduce compute_detection_loss's exact GT-to-target-voxel mapping.
+
+    get_window_data casts z,y,x to float32 and divides by a float32
+    downsample (``original_coords.astype(np.float32) / downsample``);
+    compute_detection_loss then truncates toward zero with ``.long()``
+    (equivalent to a same-sign int cast) and clamps to the downsampled
+    spatial shape.
+    """
+    scaled = raw_zyx.astype(np.float32) / np.asarray(downsample, dtype=np.float32)
+    quantized = scaled.astype(np.int64)
+    bounds = np.asarray(spatial_shape, dtype=np.int64) - 1
+    return np.clip(quantized, 0, bounds)
+
+
+def summarize(distances, counts, nearest_risks, any_node_counts, any_pair_counts,
+              quantized_node_counts, quantized_pair_counts, requested):
     percentiles = [0, 1, 5, 10, 25, 50, 75]
     values = np.percentile(distances, percentiles).tolist() if len(distances) else [None] * 7
     return {
@@ -72,6 +102,11 @@ def summarize(distances, counts, nearest_risks, any_node_counts, any_pair_counts
             {"requested_um": um, "count": int(count), "fraction": int(count) / counts["node_count"],
              "pair_count": int(pairs)}
             for um, count, pairs in zip(requested, any_node_counts, any_pair_counts)
+        ],
+        "quantized_target_collision_risk": [
+            {"requested_um": um, "count": int(count), "fraction": int(count) / counts["node_count"],
+             "pair_count": int(pairs)}
+            for um, count, pairs in zip(requested, quantized_node_counts, quantized_pair_counts)
         ],
     }
 
@@ -109,13 +144,28 @@ def audit_dataset(dataset, downsample, requested):
     if not np.isfinite(coords).all():
         raise AuditError("nonfinite physical coordinates")
     radii = [float(np.linalg.norm(half)) for half in halves]
+    spatial_shape = downsampled_spatial_shape(shape[1:], strides)
+    voxel_halves = [np.asarray(kernel, dtype=np.int64) // 2 for kernel in kernels]
+    voxel_radii = [float(np.linalg.norm(half)) for half in voxel_halves]
     boundaries = np.r_[0, np.flatnonzero(np.diff(nodes[:, 0])) + 1, len(nodes)]
     distances = []
     nearest_risks = np.zeros(len(requested), dtype=np.int64)
     any_node_counts = np.zeros(len(requested), dtype=np.int64)
     any_pair_counts = np.zeros(len(requested), dtype=np.int64)
+    quantized_node_counts = np.zeros(len(requested), dtype=np.int64)
+    quantized_pair_counts = np.zeros(len(requested), dtype=np.int64)
     singletons = 0
+    unique_target_voxels = 0
+    duplicate_target_voxel_count = 0
+    collapsed_node_count = 0
     for start, end in zip(boundaries[:-1], boundaries[1:]):
+        raw_points = nodes[start:end, 1:]
+        quantized_points = quantize_target_coords(raw_points, strides, spatial_shape)
+        unique_voxels, voxel_occupancy = np.unique(quantized_points, axis=0, return_counts=True)
+        unique_target_voxels += len(unique_voxels)
+        duplicate_target_voxel_count += int(np.count_nonzero(voxel_occupancy > 1))
+        collapsed_node_count += len(raw_points) - len(unique_voxels)
+
         points = coords[start:end]
         if len(points) == 1:
             singletons += 1
@@ -145,15 +195,36 @@ def audit_dataset(dataset, downsample, requested):
             any_pair_counts[i] += len(qualifying)
             if len(qualifying):
                 any_node_counts[i] += len(np.unique(qualifying))
+
+        # Same candidate/exact-filter strategy, but on the quantized training
+        # target grid: per-axis integer difference <= kernel // 2.
+        qtree = cKDTree(quantized_points.astype(np.float64))
+        for i, (half, radius) in enumerate(zip(voxel_halves, voxel_radii)):
+            candidates = qtree.query_pairs(r=radius, output_type="ndarray")
+            if len(candidates):
+                pair_delta = np.abs(quantized_points[candidates[:, 0]] - quantized_points[candidates[:, 1]])
+                qualifying = candidates[np.all(pair_delta <= half, axis=1)]
+            else:
+                qualifying = candidates
+            quantized_pair_counts[i] += len(qualifying)
+            if len(qualifying):
+                quantized_node_counts[i] += len(np.unique(qualifying))
     distances = np.concatenate(distances) if distances else np.empty(0)
     counts = {"node_count": len(nodes), "frame_count": int(shape[0]),
-              "annotated_frame_count": len(boundaries) - 1, "singleton_frame_count": singletons}
-    result = summarize(distances, counts, nearest_risks, any_node_counts, any_pair_counts, requested)
-    result.update(dataset_scale_um=scale.tolist(), effective_voxel_size_um=effective.tolist())
+              "annotated_frame_count": len(boundaries) - 1, "singleton_frame_count": singletons,
+              "unique_target_voxels": unique_target_voxels,
+              "duplicate_target_voxel_count": duplicate_target_voxel_count,
+              "collapsed_node_count": collapsed_node_count}
+    result = summarize(distances, counts, nearest_risks, any_node_counts, any_pair_counts,
+                        quantized_node_counts, quantized_pair_counts, requested)
+    result.update(dataset_scale_um=scale.tolist(), effective_voxel_size_um=effective.tolist(),
+                   downsampled_spatial_shape=list(spatial_shape))
     for row, kernel, half in zip(result["nearest_neighbor_collision_risk"], kernels, halves):
         row.update(voxel_kernel=list(kernel), physical_half_width_um=half.tolist())
     for row, kernel, half in zip(result["any_neighbor_collision_risk"], kernels, halves):
         row.update(voxel_kernel=list(kernel), physical_half_width_um=half.tolist())
+    for row, kernel, half in zip(result["quantized_target_collision_risk"], kernels, voxel_halves):
+        row.update(voxel_kernel=list(kernel), half_width_voxels=half.tolist())
     groups = {}
     for um, kernel in zip(requested, kernels):
         groups.setdefault(kernel, []).append(um)
@@ -189,13 +260,18 @@ def audit(data_dir, splits, split, downsample, requested):
         datasets[name] = result
         distances.append(nn)
     counts = {key: sum(d[key] for d in datasets.values()) for key in
-              ("node_count", "frame_count", "annotated_frame_count", "singleton_frame_count")}
+              ("node_count", "frame_count", "annotated_frame_count", "singleton_frame_count",
+               "unique_target_voxels", "duplicate_target_voxel_count", "collapsed_node_count")}
     nearest_risks = [sum(d["nearest_neighbor_collision_risk"][i]["count"] for d in datasets.values())
                       for i in range(len(requested))]
     any_node_counts = [sum(d["any_neighbor_collision_risk"][i]["count"] for d in datasets.values())
                         for i in range(len(requested))]
     any_pair_counts = [sum(d["any_neighbor_collision_risk"][i]["pair_count"] for d in datasets.values())
                         for i in range(len(requested))]
+    quantized_node_counts = [sum(d["quantized_target_collision_risk"][i]["count"] for d in datasets.values())
+                              for i in range(len(requested))]
+    quantized_pair_counts = [sum(d["quantized_target_collision_risk"][i]["pair_count"] for d in datasets.values())
+                              for i in range(len(requested))]
     return {
         "schema_version": 1, "split": split, "partition": "test", "axis_order": ["z", "y", "x"],
         "downsample": list(downsample), "dataset_count": len(datasets),
@@ -204,12 +280,18 @@ def audit(data_dir, splits, split, downsample, requested):
                   "nearest_neighbor_collision_risk only checks the Euclidean-nearest same-frame neighbor; "
                   "any_neighbor_collision_risk checks every same-frame neighbor via an exact axis-aligned box "
                   "test on cKDTree.query_pairs candidates, and also reports unique qualifying pairs.",
+                  "quantized_target_collision_risk reproduces training's exact GT-to-target-voxel mapping "
+                  "(float32 division by downsample, truncation toward zero as torch.long(), clamp to the "
+                  "ceiling-divided downsampled spatial shape) and checks per-axis integer difference <= "
+                  "kernel // 2 on that grid; unique_target_voxels/duplicate_target_voxel_count/"
+                  "collapsed_node_count report nodes that truncate to the same training target regardless "
+                  "of kernel.",
                   "Singletons contribute to node counts and risk denominators, but not distance percentiles.",
                   "Percentiles use linear interpolation over nodes; frame_count includes unannotated image frames.",
                   "Equal-distance ties use cKDTree choice after lexicographic coordinate sorting.",
                   "Dataset scale follows open_dataset, including its default when scale metadata is absent."],
         "aggregate": summarize(np.concatenate(distances), counts, nearest_risks, any_node_counts,
-                                any_pair_counts, requested),
+                                any_pair_counts, quantized_node_counts, quantized_pair_counts, requested),
         "datasets": datasets,
     }
 

@@ -198,6 +198,85 @@ def test_real_loader_cli_aggregation_and_determinism(tmp_path, capsys):
     assert "not guaranteed merging" in capsys.readouterr().out
 
 
+def test_quantization_boundary_truncates_adjacent_buckets():
+    # x=7 and x=8 straddle a downsample-4 boundary: truncation toward zero
+    # (torch.long() semantics) puts them in adjacent, not the same, buckets.
+    raw = np.array([[0, 0, 7], [0, 0, 8]], dtype=float)
+    spatial_shape = audit.downsampled_spatial_shape((16, 16, 16), (1, 1, 4))
+    quantized = audit.quantize_target_coords(raw, (1, 1, 4), spatial_shape)
+    np.testing.assert_array_equal(quantized, [[0, 0, 1], [0, 0, 2]])
+
+
+def test_quantization_clips_to_downsampled_bounds():
+    # x=100 is far outside the raw image, but the audit does not validate z,y,x
+    # bounds (only t); this mirrors compute_detection_loss's own defensive
+    # clamp(0, spatial_axis - 1) rather than relying on well-formed input.
+    raw = np.array([[0, 0, 100]], dtype=float)
+    spatial_shape = audit.downsampled_spatial_shape((16, 16, 16), (1, 1, 4))
+    assert spatial_shape == (16, 16, 4)
+    quantized = audit.quantize_target_coords(raw, (1, 1, 4), spatial_shape)
+    assert quantized.tolist() == [[0, 0, 3]]
+
+
+def test_quantize_matches_torch_float32_semantics():
+    import torch
+
+    raw = np.array([[0, 0, 0], [0, 0, 7], [16777217, 0, 0], [3, 5, 11]], dtype=float)
+    downsample = (1, 3, 4)
+    huge_spatial_shape = (10**8, 10**8, 10**8)  # large enough that clamp never triggers
+    torch_quantized = (torch.from_numpy(raw.astype(np.float32))
+                        / torch.tensor(downsample, dtype=torch.float32)).long().numpy()
+    quantized = audit.quantize_target_coords(raw, downsample, huge_spatial_shape)
+    np.testing.assert_array_equal(quantized, torch_quantized)
+    # float32 precision is load-bearing here: 16777217 == 2**24 + 1 is not
+    # exactly representable in float32 and rounds down to 2**24 before
+    # truncation; a naive float64 division would not reproduce this.
+    assert quantized[2, 0] == 16_777_216
+
+
+def test_quantized_collision_collapses_nodes_continuous_risk_misses():
+    # x=0 and x=1 are 1 unit apart physically; with downsample=4 they truncate
+    # to the same target voxel (index 0) and so always collide on the
+    # quantized grid, regardless of kernel. any_neighbor_collision_risk, which
+    # stays in continuous physical space, sees no collision at this kernel.
+    ds = dataset([(0, 0, 0, 0), (0, 0, 0, 1)])
+    result, _ = audit.audit_dataset(ds, (1, 1, 4), [1.0])
+    assert result["any_neighbor_collision_risk"][0]["count"] == 0
+    assert result["any_neighbor_collision_risk"][0]["pair_count"] == 0
+    assert result["quantized_target_collision_risk"][0]["count"] == 2
+    assert result["quantized_target_collision_risk"][0]["pair_count"] == 1
+    assert result["unique_target_voxels"] == 1
+    assert result["duplicate_target_voxel_count"] == 1
+    assert result["collapsed_node_count"] == 1
+
+
+def test_quantized_aggregation_across_datasets(tmp_path):
+    # Dataset a: x=0 and x=1 collapse into one target voxel (downsample 4);
+    # x=9 lands in a separate voxel. Dataset b is a lone singleton frame and
+    # contributes no pairs or collapses. The aggregate must sum node counts,
+    # pair counts, unique-voxel counts, and collapse counts across both.
+    for name, rows in [("a", [(0, 0, 0, 0), (0, 0, 0, 1), (0, 0, 0, 9)]),
+                        ("b", [(1, 0, 0, 0)])]:
+        ds = dataset(rows)
+        group = zarr.open_group(str(tmp_path / f"{name}.zarr"), mode="w")
+        group.create_array("0", shape=(4, 16, 16, 16), dtype="uint8")
+        group.attrs["multiscales"] = [{"datasets": [{"coordinateTransformations": [
+            {"type": "scale", "scale": [1, 1, 1, 1]}]}]}]
+        ds.tracks.to_geff(str(tmp_path / f"{name}.geff"))
+    splits = tmp_path / "splits.json"
+    splits.write_text(json.dumps([{"split": 0, "train": [], "test": ["a", "b"]}]))
+    report = audit.audit(tmp_path, splits, 0, (1, 1, 4), [1.0])
+    assert report["datasets"]["a"]["duplicate_target_voxel_count"] == 1
+    assert report["datasets"]["a"]["collapsed_node_count"] == 1
+    assert report["datasets"]["b"]["duplicate_target_voxel_count"] == 0
+    assert report["datasets"]["b"]["collapsed_node_count"] == 0
+    assert report["aggregate"]["unique_target_voxels"] == 3
+    assert report["aggregate"]["duplicate_target_voxel_count"] == 1
+    assert report["aggregate"]["collapsed_node_count"] == 1
+    assert report["aggregate"]["quantized_target_collision_risk"][0]["count"] == 2
+    assert report["aggregate"]["quantized_target_collision_risk"][0]["pair_count"] == 1
+
+
 def test_atomic_failure_preserves_previous_output(tmp_path, monkeypatch):
     out = tmp_path / "report.json"
     out.write_text("original")

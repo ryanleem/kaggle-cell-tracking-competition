@@ -33,15 +33,20 @@ def test_same_frame_singletons_and_percentiles():
     assert result["nodes_with_neighbor"] == 3
     assert result["nearest_neighbor_um"] == dict(zip(
         ["minimum", "p1", "p5", "p10", "p25", "p50", "p75"], [2, 2, 2, 2, 2, 2, 4]))
-    assert result["collision_risk"][0]["count"] == 2
-    assert result["collision_risk"][0]["fraction"] == 0.5
+    assert result["nearest_neighbor_collision_risk"][0]["count"] == 2
+    assert result["nearest_neighbor_collision_risk"][0]["fraction"] == 0.5
+    assert result["any_neighbor_collision_risk"][0]["count"] == 2
+    assert result["any_neighbor_collision_risk"][0]["fraction"] == 0.5
+    assert result["any_neighbor_collision_risk"][0]["pair_count"] == 1
 
 
 def test_all_singleton_frames():
     result, nn = audit.audit_dataset(dataset([(0, 0, 0, 0), (1, 0, 0, 0)]), (1, 1, 1), [100])
     assert len(nn) == 0
     assert all(v is None for v in result["nearest_neighbor_um"].values())
-    assert result["collision_risk"][0]["count"] == 0
+    assert result["nearest_neighbor_collision_risk"][0]["count"] == 0
+    assert result["any_neighbor_collision_risk"][0]["count"] == 0
+    assert result["any_neighbor_collision_risk"][0]["pair_count"] == 0
 
 
 def test_physical_scaling_is_independent_of_downsample():
@@ -55,13 +60,16 @@ def test_physical_scaling_is_independent_of_downsample():
 def test_anisotropic_axis_window_and_boundary():
     ds = dataset([(0, 0, 0, 0), (0, 1, 1, 0), (1, 0, 0, 0), (1, 0, 0, 1)], scale=(2, 1, 4))
     result, _ = audit.audit_dataset(ds, (1, 1, 1), [4])
-    risk = result["collision_risk"][0]
+    risk = result["nearest_neighbor_collision_risk"][0]
     assert risk["voxel_kernel"] == [3, 5, 1]
     assert risk["physical_half_width_um"] == [2, 2, 0]
     # A diagonal within the box qualifies despite distance > 2; z half-width
     # cannot be used as a spherical radius or as the x half-width.
     assert risk["count"] == 2
     assert risk["fraction"] == 0.5
+    any_risk = result["any_neighbor_collision_risk"][0]
+    assert any_risk["count"] == 2
+    assert any_risk["pair_count"] == 1
 
 
 def test_nearest_neighbor_selection_uses_physical_distance():
@@ -71,24 +79,33 @@ def test_nearest_neighbor_selection_uses_physical_distance():
 
 
 def test_risk_checks_euclidean_nearest_not_any_neighbor_in_box():
-    # For the origin the x neighbor is nearest but outside the zero-width x
-    # window. A farther z neighbor inside the box does not count for the origin.
+    # A=(0,0,0), B=(2,0,0), C=(0,0,1) physical. For A the x neighbor (C) is
+    # nearest (distance 1) but outside the zero-width x window; the farther z
+    # neighbor (B, distance 2) is inside the box. nearest_neighbor_collision_risk
+    # only checks each node's own Euclidean-nearest neighbor, so it only counts
+    # B (whose nearest neighbor A happens to be the in-box one) and misses that
+    # A also has an in-box neighbor (B) that just isn't its Euclidean-nearest.
+    # any_neighbor_collision_risk checks every same-frame neighbor and must
+    # therefore identify both endpoints (A and B) of the qualifying A-B pair.
     ds = dataset([(0, 0, 0, 0), (0, 2, 0, 0), (0, 0, 0, .25)], scale=(1, 1, 4))
     result, _ = audit.audit_dataset(ds, (1, 1, 1), [4])
-    assert result["collision_risk"][0]["count"] == 1
+    assert result["nearest_neighbor_collision_risk"][0]["count"] == 1
+    any_risk = result["any_neighbor_collision_risk"][0]
+    assert any_risk["count"] == 2
+    assert any_risk["pair_count"] == 1
 
 
 @pytest.mark.parametrize("um,expected", [(0.1, 1), (1.5, 3), (2.5, 3), (3.5, 5), (4.5, 5)])
 def test_production_rounding(um, expected):
     result, _ = audit.audit_dataset(dataset([(0, 0, 0, 0)]), (1, 1, 1), [um])
-    assert result["collision_risk"][0]["voxel_kernel"] == [expected] * 3
+    assert result["nearest_neighbor_collision_risk"][0]["voxel_kernel"] == [expected] * 3
 
 
 def test_equivalent_kernels():
     result, _ = audit.audit_dataset(dataset([(0, 0, 0, 0)], scale=(1.625, .40625, .40625)),
                                     (1, 4, 4), [6., 7.])
     assert result["equivalent_kernels"] == [{"requested_um": [6., 7.], "voxel_kernel": [5, 5, 5]}]
-    assert result["collision_risk"][0]["physical_half_width_um"] == [3.25] * 3
+    assert result["nearest_neighbor_collision_risk"][0]["physical_half_width_um"] == [3.25] * 3
 
 
 def test_duplicate_coordinates_and_order_independence():
@@ -96,7 +113,15 @@ def test_duplicate_coordinates_and_order_independence():
     first, _ = audit.audit_dataset(dataset(rows), (1, 1, 1), [1, 5])
     second, _ = audit.audit_dataset(dataset(rows[::-1]), (1, 1, 1), [1, 5])
     assert first == second
-    assert [r["count"] for r in first["collision_risk"]] == [2, 4]
+    assert [r["count"] for r in first["nearest_neighbor_collision_risk"]] == [2, 4]
+    # um=5's half-window (2,2,2) is wide enough that every one of the 4 nodes
+    # has some in-box neighbor either way, so any-neighbor node counts match
+    # the nearest-neighbor counts here; but any-neighbor also finds the extra
+    # P2-P3 pair that no node's *nearest* neighbor captures, so its unique
+    # pair count (6, i.e. all C(4,2) pairs) exceeds the 1 duplicate-only pair
+    # nearest-neighbor risk would imply.
+    assert [r["count"] for r in first["any_neighbor_collision_risk"]] == [2, 4]
+    assert [r["pair_count"] for r in first["any_neighbor_collision_risk"]] == [1, 6]
 
 
 @pytest.mark.parametrize("scale", [(0, 1, 1), (-1, 1, 1), (np.nan, 1, 1), (1, np.inf, 1), (1, 1)])
@@ -163,8 +188,13 @@ def test_real_loader_cli_aggregation_and_determinism(tmp_path, capsys):
     assert result["dataset_count"] == 2
     assert result["aggregate"]["node_count"] == 3
     assert result["aggregate"]["frame_count"] == 8
-    assert result["aggregate"]["collision_risk"][0]["fraction"] == 2 / 3
+    assert result["aggregate"]["nearest_neighbor_collision_risk"][0]["fraction"] == 2 / 3
     assert result["aggregate"]["nearest_neighbor_um"]["p50"] == 2
+    # Aggregation across datasets a (one qualifying pair) and b (singleton, no
+    # pairs) must sum node counts and unique-pair counts across both kernels.
+    assert [r["count"] for r in result["aggregate"]["any_neighbor_collision_risk"]] == [2, 2]
+    assert [r["pair_count"] for r in result["aggregate"]["any_neighbor_collision_risk"]] == [1, 1]
+    assert result["aggregate"]["any_neighbor_collision_risk"][0]["fraction"] == 2 / 3
     assert "not guaranteed merging" in capsys.readouterr().out
 
 

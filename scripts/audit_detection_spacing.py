@@ -11,6 +11,21 @@ in the collision-risk denominator. Half-windows are inclusive, with no coordinat
 quantization. This measures collision risk, not guaranteed merging. A cKDTree
 per frame avoids a quadratic distance matrix. Ties use the tree's choice on
 lexicographically sorted coordinates, making results independent of graph order.
+
+Two collision-risk metrics are reported per pooling kernel:
+nearest_neighbor_collision_risk only checks whether each node's Euclidean-
+nearest same-frame neighbor lies inside its axis-aligned half-window, and can
+undercount when that nearest neighbor is outside the box but another neighbor
+is inside it. any_neighbor_collision_risk instead checks every same-frame
+neighbor: cKDTree.query_pairs(r=norm(half_width)) finds Euclidean-radius
+candidates (a safe superset, since a box corner is the farthest point in the
+box from its center), and an exact per-axis inclusive box test on those
+candidates decides which pairs actually qualify. Both metrics use continuous
+physical GT coordinates (frame-relative Euclidean nearest neighbor times
+dataset scale); training's own coordinate quantization happens later, against
+the network's downsampled spatial grid (see compute_detection_loss in
+train_unet_transformer.py), which this audit does not have access to without
+loading images, so it is not reproduced here.
 """
 
 from __future__ import annotations
@@ -42,16 +57,21 @@ def positive_triplet(values, name, *, integer=False):
     return arr
 
 
-def summarize(distances, counts, risks, requested):
+def summarize(distances, counts, nearest_risks, any_node_counts, any_pair_counts, requested):
     percentiles = [0, 1, 5, 10, 25, 50, 75]
     values = np.percentile(distances, percentiles).tolist() if len(distances) else [None] * 7
     return {
         **counts,
         "nodes_with_neighbor": len(distances),
         "nearest_neighbor_um": dict(zip(["minimum", "p1", "p5", "p10", "p25", "p50", "p75"], values)),
-        "collision_risk": [
+        "nearest_neighbor_collision_risk": [
             {"requested_um": um, "count": int(count), "fraction": int(count) / counts["node_count"]}
-            for um, count in zip(requested, risks)
+            for um, count in zip(requested, nearest_risks)
+        ],
+        "any_neighbor_collision_risk": [
+            {"requested_um": um, "count": int(count), "fraction": int(count) / counts["node_count"],
+             "pair_count": int(pairs)}
+            for um, count, pairs in zip(requested, any_node_counts, any_pair_counts)
         ],
     }
 
@@ -88,16 +108,20 @@ def audit_dataset(dataset, downsample, requested):
         coords = nodes[:, 1:] * scale
     if not np.isfinite(coords).all():
         raise AuditError("nonfinite physical coordinates")
+    radii = [float(np.linalg.norm(half)) for half in halves]
     boundaries = np.r_[0, np.flatnonzero(np.diff(nodes[:, 0])) + 1, len(nodes)]
     distances = []
-    risks = np.zeros(len(requested), dtype=np.int64)
+    nearest_risks = np.zeros(len(requested), dtype=np.int64)
+    any_node_counts = np.zeros(len(requested), dtype=np.int64)
+    any_pair_counts = np.zeros(len(requested), dtype=np.int64)
     singletons = 0
     for start, end in zip(boundaries[:-1], boundaries[1:]):
         points = coords[start:end]
         if len(points) == 1:
             singletons += 1
             continue
-        dist, indices = cKDTree(points).query(points, k=2, workers=1)
+        tree = cKDTree(points)
+        dist, indices = tree.query(points, k=2, workers=1)
         # With duplicate coordinates the first returned neighbor need not be self.
         choice = np.where(indices[:, 0] == np.arange(len(points)), 1, 0)
         neighbor = indices[np.arange(len(points)), choice]
@@ -106,14 +130,29 @@ def audit_dataset(dataset, downsample, requested):
             raise AuditError("nonfinite nearest-neighbor distances")
         distances.append(nearest)
         delta = np.abs(points - points[neighbor])
-        for i, half in enumerate(halves):
-            risks[i] += np.count_nonzero(np.all(delta <= half, axis=1))
+        for i, (half, radius) in enumerate(zip(halves, radii)):
+            nearest_risks[i] += np.count_nonzero(np.all(delta <= half, axis=1))
+            # Euclidean radius = norm(half) is a safe superset of the box: a box
+            # corner is the farthest point in the box from its center. The exact
+            # per-axis inclusive check below then filters candidates down to the
+            # true box membership, avoiding an O(n^2) all-pairs comparison.
+            candidates = tree.query_pairs(r=radius, output_type="ndarray")
+            if len(candidates):
+                pair_delta = np.abs(points[candidates[:, 0]] - points[candidates[:, 1]])
+                qualifying = candidates[np.all(pair_delta <= half, axis=1)]
+            else:
+                qualifying = candidates
+            any_pair_counts[i] += len(qualifying)
+            if len(qualifying):
+                any_node_counts[i] += len(np.unique(qualifying))
     distances = np.concatenate(distances) if distances else np.empty(0)
     counts = {"node_count": len(nodes), "frame_count": int(shape[0]),
               "annotated_frame_count": len(boundaries) - 1, "singleton_frame_count": singletons}
-    result = summarize(distances, counts, risks, requested)
+    result = summarize(distances, counts, nearest_risks, any_node_counts, any_pair_counts, requested)
     result.update(dataset_scale_um=scale.tolist(), effective_voxel_size_um=effective.tolist())
-    for row, kernel, half in zip(result["collision_risk"], kernels, halves):
+    for row, kernel, half in zip(result["nearest_neighbor_collision_risk"], kernels, halves):
+        row.update(voxel_kernel=list(kernel), physical_half_width_um=half.tolist())
+    for row, kernel, half in zip(result["any_neighbor_collision_risk"], kernels, halves):
         row.update(voxel_kernel=list(kernel), physical_half_width_um=half.tolist())
     groups = {}
     for um, kernel in zip(requested, kernels):
@@ -151,17 +190,27 @@ def audit(data_dir, splits, split, downsample, requested):
         distances.append(nn)
     counts = {key: sum(d[key] for d in datasets.values()) for key in
               ("node_count", "frame_count", "annotated_frame_count", "singleton_frame_count")}
-    risks = [sum(d["collision_risk"][i]["count"] for d in datasets.values()) for i in range(len(requested))]
+    nearest_risks = [sum(d["nearest_neighbor_collision_risk"][i]["count"] for d in datasets.values())
+                      for i in range(len(requested))]
+    any_node_counts = [sum(d["any_neighbor_collision_risk"][i]["count"] for d in datasets.values())
+                        for i in range(len(requested))]
+    any_pair_counts = [sum(d["any_neighbor_collision_risk"][i]["pair_count"] for d in datasets.values())
+                        for i in range(len(requested))]
     return {
         "schema_version": 1, "split": split, "partition": "test", "axis_order": ["z", "y", "x"],
         "downsample": list(downsample), "dataset_count": len(datasets),
         "notes": ["Collision risk, not guaranteed merging; inclusive axis-aligned half-window around each GT node.",
                   "Nearest neighbor is selected by physical Euclidean distance within the same frame only.",
+                  "nearest_neighbor_collision_risk only checks the Euclidean-nearest same-frame neighbor; "
+                  "any_neighbor_collision_risk checks every same-frame neighbor via an exact axis-aligned box "
+                  "test on cKDTree.query_pairs candidates, and also reports unique qualifying pairs.",
                   "Singletons contribute to node counts and risk denominators, but not distance percentiles.",
                   "Percentiles use linear interpolation over nodes; frame_count includes unannotated image frames.",
                   "Equal-distance ties use cKDTree choice after lexicographic coordinate sorting.",
                   "Dataset scale follows open_dataset, including its default when scale metadata is absent."],
-        "aggregate": summarize(np.concatenate(distances), counts, risks, requested), "datasets": datasets,
+        "aggregate": summarize(np.concatenate(distances), counts, nearest_risks, any_node_counts,
+                                any_pair_counts, requested),
+        "datasets": datasets,
     }
 
 

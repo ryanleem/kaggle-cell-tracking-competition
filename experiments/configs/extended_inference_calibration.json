@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "description": "Extended, resumable inference-calibration workflow that starts from the calibrated baseline (det=0.70, edge=0.35, pool_kernel_um=5.0, greedy) and screens a wider detection threshold range (Stage A), a lower edge-threshold range (Stage B), and a pooling-kernel comparison against pool_kernel_um=6.0 (Stage C, gated on the preserved detection-spacing audit), before confirming the top candidates on the complete fold-0 test partition (Stage D). Separate from and does not replace experiments/configs/inference_threshold_calibration.json.",
+  "checkpoint_labels": ["7500", "10000"],
+  "tracking": "greedy",
+  "subset_split_file": "experiments/splits/calibration_subset_fold0.json",
+  "subset_split": 0,
+  "subset_dataset_names": [
+    "44b6_d5e7d891",
+    "44b6_d754aa59",
+    "44b6_e57ff5c6",
+    "6bba_268e1230",
+    "6bba_3a1849c2",
+    "6bba_afb141ff"
+  ],
+  "full_split_file": "experiments/splits/baseline_fold0_seed0.json",
+  "full_split": 0,
+  "baseline": {
+    "det_threshold": 0.70,
+    "edge_threshold": 0.35,
+    "pool_kernel_um": 5.0,
+    "tracking": "greedy"
+  },
+  "audit": {
+    "path": "experiments/audits/detection_spacing_fold0_downsample_1x4x4.json",
+    "sha256": "59c4e39e3136164a715f95623209d09013fcd09ef32b7e794f1bc5dd51f355a7",
+    "primary_pool_kernel_um": 5.0,
+    "primary_voxel_kernel": [3, 3, 3],
+    "secondary_pool_kernel_um": 6.0,
+    "secondary_voxel_kernel": [5, 5, 5],
+    "quantized_collision_fraction_max": 0.001,
+    "dataset_count": 19,
+    "node_count": 13335,
+    "observed": {
+      "primary": {"count": 0, "pair_count": 0, "fraction": 0.0},
+      "secondary": {"count": 2, "pair_count": 1, "fraction": 0.00014998125234345707}
+    },
+    "tolerance": 0.001
+  },
+  "checkpoint_pins": {
+    "7500": {
+      "filename": "edge_predictor_iter_007500.pth",
+      "sha256": "7cd66f8168647c38cca222604d88c4bc25f9c2b66f82b9ea3f552d1bb2b9c4c8"
+    },
+    "10000": {
+      "filename": "edge_predictor_iter_010000.pth",
+      "sha256": "d6a0221948a6335f581ec12b509bc529672b99f0dfcd6c393be3f1a01a9c7d96"
+    },
+    "adjacent_config_sha256": "b9c71baa3e2d5523b420e419eae8c56f5598917f36bbfecbe9cc2703598b8a6c"
+  },
+  "stage_a": {
+    "checkpoint_labels": ["7500", "10000"],
+    "det_thresholds": [0.70, 0.74, 0.78, 0.82, 0.86],
+    "edge_threshold": 0.35,
+    "pool_kernel_um": 5.0,
+    "n_best_det_thresholds_per_checkpoint": 2,
+    "det_threshold_upper_bound_warning": 0.86
+  },
+  "stage_b": {
+    "checkpoint_labels": ["7500", "10000"],
+    "edge_thresholds": [0.20, 0.25, 0.30, 0.35],
+    "pool_kernel_um": 5.0,
+    "n_best_pairs_per_checkpoint": 2,
+    "edge_threshold_lower_bound_warning": 0.20
+  },
+  "stage_c": {
+    "checkpoint_labels": ["7500", "10000"],
+    "pool_kernel_um_values": [5.0, 6.0],
+    "n_best_candidates_per_checkpoint": 2
+  },
+  "stage_d": {
+    "checkpoint_labels": ["7500", "10000"]
+  },
+  "selection_metric": "summary_metrics.score",
+  "tie_break": {
+    "description": "Within each checkpoint (Stages A-C) or globally (Stage D), sort by score descending; break ties by ascending value of the field(s) listed for the stage, then (Stage D only) by checkpoint_label position in stage_d.checkpoint_labels.",
+    "stage_a": ["det_threshold"],
+    "stage_b": ["edge_threshold", "det_threshold"],
+    "stage_c": ["pool_kernel_um", "edge_threshold", "det_threshold"],
+    "stage_d": ["pool_kernel_um", "edge_threshold", "det_threshold", "checkpoint_label"]
+  }
+}

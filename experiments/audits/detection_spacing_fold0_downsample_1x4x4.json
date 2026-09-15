@@ -1,0 +1,4909 @@
+{
+  "aggregate": {
+    "annotated_frame_count": 1840,
+    "any_neighbor_collision_risk": [
+      {
+        "count": 0,
+        "fraction": 0.0,
+        "pair_count": 0,
+        "requested_um": 3.0
+      },
+      {
+        "count": 0,
+        "fraction": 0.0,
+        "pair_count": 0,
+        "requested_um": 5.0
+      },
+      {
+        "count": 2,
+        "fraction": 0.00014998125234345707,
+        "pair_count": 1,
+        "requested_um": 6.0
+      },
+      {
+        "count": 2,
+        "fraction": 0.00014998125234345707,
+        "pair_count": 1,
+        "requested_um": 7.0
+      }
+    ],
+    "collapsed_node_count": 0,
+    "duplicate_target_voxel_count": 0,
+    "frame_count": 1900,
+    "nearest_neighbor_collision_risk": [
+      {
+        "count": 0,
+        "fraction": 0.0,
+        "requested_um": 3.0
+      },
+      {
+        "count": 0,
+        "fraction": 0.0,
+        "requested_um": 5.0
+      },
+      {
+        "count": 2,
+        "fraction": 0.00014998125234345707,
+        "requested_um": 6.0
+      },
+      {
+        "count": 2,
+        "fraction": 0.00014998125234345707,
+        "requested_um": 7.0
+      }
+    ],
+    "nearest_neighbor_um": {
+      "minimum": 4.667457150312148,
+      "p1": 9.2373206217693,
+      "p10": 16.055871686862723,
+      "p25": 21.62685143808502,
+      "p5": 13.411480807023246,
+      "p50": 28.063613563652133,
+      "p75": 36.59351981438622
+    },
+    "node_count": 13335,
+    "nodes_with_neighbor": 13118,
+    "quantized_target_collision_risk": [
+      {
+        "count": 0,
+        "fraction": 0.0,
+        "pair_count": 0,
+        "requested_um": 3.0
+      },
+      {
+        "count": 0,
+        "fraction": 0.0,
+        "pair_count": 0,
+        "requested_um": 5.0
+      },
+      {
+        "count": 2,
+        "fraction": 0.00014998125234345707,
+        "pair_count": 1,
+        "requested_um": 6.0
+      },
+      {
+        "count": 2,
+        "fraction": 0.00014998125234345707,
+        "pair_count": 1,
+        "requested_um": 7.0
+      }
+    ],
+    "singleton_frame_count": 217,
+    "unique_target_voxels": 13335
+  },
+  "axis_order": [
+    "z",
+    "y",
+    "x"
+  ],
+  "dataset_count": 19,
+  "datasets": {
+    "44b6_1574802b": {
+      "annotated_frame_count": 95,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 18.709565776962865,
+        "p1": 19.04946768615378,
+        "p10": 29.01825989497068,
+        "p25": 31.418125864101125,
+        "p5": 25.6963978547498,
+        "p50": 34.399388097428655,
+        "p75": 40.13790453908215
+      },
+      "node_count": 155,
+      "nodes_with_neighbor": 120,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 35,
+      "unique_target_voxels": 155
+    },
+    "44b6_706092f0": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 2,
+          "fraction": 0.01694915254237288,
+          "pair_count": 1,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 2,
+          "fraction": 0.01694915254237288,
+          "pair_count": 1,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 2,
+          "fraction": 0.01694915254237288,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 2,
+          "fraction": 0.01694915254237288,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 4.667457150312148,
+        "p1": 4.667457150312148,
+        "p10": 6.127477348036376,
+        "p25": 6.397631397634597,
+        "p5": 5.747321777863532,
+        "p50": 7.390657688141454,
+        "p75": 7.675867723749543
+      },
+      "node_count": 118,
+      "nodes_with_neighbor": 36,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 2,
+          "fraction": 0.01694915254237288,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 1,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 2,
+          "fraction": 0.01694915254237288,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 1,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 82,
+      "unique_target_voxels": 118
+    },
+    "44b6_d5e7d891": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 5.701990469344894,
+        "p1": 7.2808275485873155,
+        "p10": 10.878097619184157,
+        "p25": 15.02575913223688,
+        "p5": 9.299436942576813,
+        "p50": 20.021984986821362,
+        "p75": 25.21029763334799
+      },
+      "node_count": 906,
+      "nodes_with_neighbor": 906,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 906
+    },
+    "44b6_d754aa59": {
+      "annotated_frame_count": 67,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 12.112791856648904,
+        "p1": 12.112791856648904,
+        "p10": 12.112791856648904,
+        "p25": 13.990579978149583,
+        "p5": 12.112791856648904,
+        "p50": 14.759795476225271,
+        "p75": 14.854535555260554
+      },
+      "node_count": 72,
+      "nodes_with_neighbor": 10,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 62,
+      "unique_target_voxels": 72
+    },
+    "44b6_e57ff5c6": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 21.038886986364083,
+        "p1": 21.516975578662905,
+        "p10": 23.425517770425053,
+        "p25": 25.901424460104504,
+        "p5": 22.435889566161624,
+        "p50": 34.04025936758561,
+        "p75": 39.49828170708822
+      },
+      "node_count": 193,
+      "nodes_with_neighbor": 161,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 32,
+      "unique_target_voxels": 193
+    },
+    "6bba_2312ac41": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 6.080193253507654,
+        "p1": 16.062034676984688,
+        "p10": 19.007117293595577,
+        "p25": 23.472140289044194,
+        "p5": 17.879615881290626,
+        "p50": 28.889488383536666,
+        "p75": 35.43934606284079
+      },
+      "node_count": 1156,
+      "nodes_with_neighbor": 1156,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 1156
+    },
+    "6bba_268e1230": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 11.554938405828912,
+        "p1": 14.759795476225271,
+        "p10": 20.714766773970688,
+        "p25": 23.499376653966802,
+        "p5": 18.371305963716896,
+        "p50": 29.488825346434197,
+        "p75": 34.56946414919531
+      },
+      "node_count": 641,
+      "nodes_with_neighbor": 641,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 641
+    },
+    "6bba_283bf9f1": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 7.632744530147724,
+        "p1": 10.966945146640509,
+        "p10": 14.880617420751127,
+        "p25": 18.03127707970237,
+        "p5": 13.560171668239727,
+        "p50": 23.363655190817994,
+        "p75": 30.049458530489574
+      },
+      "node_count": 1342,
+      "nodes_with_neighbor": 1342,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 1342
+    },
+    "6bba_3a1849c2": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 9.75,
+        "p1": 11.08824423906025,
+        "p10": 18.797569864546322,
+        "p25": 24.116335879440722,
+        "p5": 14.031806781826067,
+        "p50": 28.47809602352306,
+        "p75": 38.90891055160116
+      },
+      "node_count": 1173,
+      "nodes_with_neighbor": 1173,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 1173
+    },
+    "6bba_3abfe10a": {
+      "annotated_frame_count": 82,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 5.92902355472636,
+        "p1": 7.450634564103379,
+        "p10": 12.407591402484417,
+        "p25": 15.469539121286063,
+        "p5": 10.436751470165417,
+        "p50": 22.10985533930514,
+        "p75": 31.109308293499552
+      },
+      "node_count": 997,
+      "nodes_with_neighbor": 993,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 4,
+      "unique_target_voxels": 997
+    },
+    "6bba_5c824876": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 11.554938405828912,
+        "p1": 15.565805817147886,
+        "p10": 20.626140927197724,
+        "p25": 23.858326147542286,
+        "p5": 19.059978939366825,
+        "p50": 27.990005268318093,
+        "p75": 34.54797364364707
+      },
+      "node_count": 1170,
+      "nodes_with_neighbor": 1170,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 1170
+    },
+    "6bba_61dd1e0d": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 19.77315197591168,
+        "p1": 20.02245292768703,
+        "p10": 22.139693214337907,
+        "p25": 25.6604818515607,
+        "p5": 20.86637886866293,
+        "p50": 34.224000738699445,
+        "p75": 45.472787621417055
+      },
+      "node_count": 558,
+      "nodes_with_neighbor": 558,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 558
+    },
+    "6bba_7af54fde": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 11.324104890122662,
+        "p1": 11.790877868209312,
+        "p10": 16.0095491523809,
+        "p25": 19.628643652578916,
+        "p5": 13.601793597261356,
+        "p50": 26.86476912821884,
+        "p75": 36.52411172202534
+      },
+      "node_count": 1131,
+      "nodes_with_neighbor": 1131,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 1131
+    },
+    "6bba_7b5d3b2c": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 22.995329009387973,
+        "p1": 24.331672049132486,
+        "p10": 27.493252012994024,
+        "p25": 30.8322071866417,
+        "p5": 25.48712910470695,
+        "p50": 38.3040110905503,
+        "p75": 47.503464100657965
+      },
+      "node_count": 565,
+      "nodes_with_neighbor": 565,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 565
+    },
+    "6bba_aeee7805": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 7.621925609713073,
+        "p1": 16.45306007753657,
+        "p10": 22.941437843180186,
+        "p25": 28.361953223023974,
+        "p5": 21.39512344427516,
+        "p50": 34.13467124860001,
+        "p75": 39.221526048723376
+      },
+      "node_count": 795,
+      "nodes_with_neighbor": 795,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 795
+    },
+    "6bba_afb141ff": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 6.600781203766718,
+        "p1": 10.531203634912773,
+        "p10": 15.320488338318524,
+        "p25": 21.724878055133342,
+        "p5": 13.60573614632608,
+        "p50": 31.473233915900668,
+        "p75": 40.69400389645875
+      },
+      "node_count": 654,
+      "nodes_with_neighbor": 654,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 654
+    },
+    "6bba_c27cba08": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 15.554654146749776,
+        "p1": 16.520673958727837,
+        "p10": 23.67708163272037,
+        "p25": 25.467695530318405,
+        "p5": 22.752953231594503,
+        "p50": 35.090688869164424,
+        "p75": 44.728106550859046
+      },
+      "node_count": 517,
+      "nodes_with_neighbor": 517,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 517
+    },
+    "6bba_c328f2fd": {
+      "annotated_frame_count": 96,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 7.5457588460339755,
+        "p1": 8.806863072088252,
+        "p10": 13.607859057360933,
+        "p25": 16.779649597801498,
+        "p5": 11.594853423410182,
+        "p50": 22.86938541068605,
+        "p75": 36.924080155265884
+      },
+      "node_count": 511,
+      "nodes_with_neighbor": 509,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 2,
+      "unique_target_voxels": 511
+    },
+    "6bba_d1acb6ff": {
+      "annotated_frame_count": 100,
+      "any_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "pair_count": 0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "collapsed_node_count": 0,
+      "dataset_scale_um": [
+        1.625,
+        0.40625,
+        0.40625
+      ],
+      "downsampled_spatial_shape": [
+        64,
+        64,
+        64
+      ],
+      "duplicate_target_voxel_count": 0,
+      "effective_voxel_size_um": [
+        1.625,
+        1.625,
+        1.625
+      ],
+      "equivalent_kernels": [
+        {
+          "requested_um": [
+            3.0,
+            5.0
+          ],
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "requested_um": [
+            6.0,
+            7.0
+          ],
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "frame_count": 100,
+      "nearest_neighbor_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            1.625,
+            1.625,
+            1.625
+          ],
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "physical_half_width_um": [
+            3.25,
+            3.25,
+            3.25
+          ],
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "nearest_neighbor_um": {
+        "minimum": 6.724634051381532,
+        "p1": 8.617863895711048,
+        "p10": 14.759795476225271,
+        "p25": 21.862139076494778,
+        "p5": 12.058167939720361,
+        "p50": 26.753960717293804,
+        "p75": 35.5277180522476
+      },
+      "node_count": 681,
+      "nodes_with_neighbor": 681,
+      "quantized_target_collision_risk": [
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 3.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            1,
+            1,
+            1
+          ],
+          "pair_count": 0,
+          "requested_um": 5.0,
+          "voxel_kernel": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 6.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "count": 0,
+          "fraction": 0.0,
+          "half_width_voxels": [
+            2,
+            2,
+            2
+          ],
+          "pair_count": 0,
+          "requested_um": 7.0,
+          "voxel_kernel": [
+            5,
+            5,
+            5
+          ]
+        }
+      ],
+      "singleton_frame_count": 0,
+      "unique_target_voxels": 681
+    }
+  },
+  "downsample": [
+    1,
+    4,
+    4
+  ],
+  "notes": [
+    "Collision risk, not guaranteed merging; inclusive axis-aligned half-window around each GT node.",
+    "Nearest neighbor is selected by physical Euclidean distance within the same frame only.",
+    "nearest_neighbor_collision_risk only checks the Euclidean-nearest same-frame neighbor; any_neighbor_collision_risk checks every same-frame neighbor via an exact axis-aligned box test on cKDTree.query_pairs candidates, and also reports unique qualifying pairs.",
+    "quantized_target_collision_risk reproduces training's exact GT-to-target-voxel mapping (float32 division by downsample, truncation toward zero as torch.long(), clamp to the ceiling-divided downsampled spatial shape) and checks per-axis integer difference <= kernel // 2 on that grid; unique_target_voxels/duplicate_target_voxel_count/collapsed_node_count report nodes that truncate to the same training target regardless of kernel.",
+    "Singletons contribute to node counts and risk denominators, but not distance percentiles.",
+    "Percentiles use linear interpolation over nodes; frame_count includes unannotated image frames.",
+    "Equal-distance ties use cKDTree choice after lexicographic coordinate sorting.",
+    "Dataset scale follows open_dataset, including its default when scale metadata is absent."
+  ],
+  "partition": "test",
+  "schema_version": 1,
+  "split": 0
+}
